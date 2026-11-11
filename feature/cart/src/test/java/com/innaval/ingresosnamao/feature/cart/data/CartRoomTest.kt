@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.innaval.ingresosnamao.core.common.dispatchers.DispatcherProvider
 import com.innaval.ingresosnamao.core.database.AppDatabase
 import com.innaval.ingresosnamao.core.database.di.migration1To2
+import com.innaval.ingresosnamao.core.database.di.migration2To3
 import com.innaval.ingresosnamao.feature.cart.domain.*
 import io.mockk.every
 import io.mockk.mockk
@@ -43,7 +44,7 @@ class CartRoomTest {
 
     private fun open(): Pair<AppDatabase, RoomCartRepository> {
         val db = Room.databaseBuilder(context, AppDatabase::class.java, databaseName)
-            .addMigrations(migration1To2)
+            .addMigrations(migration1To2, migration2To3)
             .allowMainThreadQueries()
             .build()
         opened.add(db)

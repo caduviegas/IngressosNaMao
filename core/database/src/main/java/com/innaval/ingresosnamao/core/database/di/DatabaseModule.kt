@@ -17,11 +17,21 @@ val migration1To2 = object : Migration(1, 2) {
     }
 }
 
+val migration2To3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `ticket_purchases` (`reference` TEXT NOT NULL, `orderId` TEXT NOT NULL, `userId` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `totalCents` INTEGER NOT NULL, `issuedAtMillis` INTEGER NOT NULL, PRIMARY KEY(`reference`))")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_ticket_purchases_orderId` ON `ticket_purchases` (`orderId`)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `issued_tickets` (`id` TEXT NOT NULL, `purchaseReference` TEXT NOT NULL, `eventId` TEXT NOT NULL, `eventName` TEXT NOT NULL, `unitPriceCents` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`purchaseReference`) REFERENCES `ticket_purchases`(`reference`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_issued_tickets_purchaseReference` ON `issued_tickets` (`purchaseReference`)")
+    }
+}
+
 val databaseModule = module {
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, "ingressos.db")
-            .addMigrations(migration1To2).build()
+            .addMigrations(migration1To2, migration2To3).build()
     }
     single { get<AppDatabase>().ticketDao() }
     single { get<AppDatabase>().cartDao() }
+    single { get<AppDatabase>().issuedTicketDao() }
 }

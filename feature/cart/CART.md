@@ -37,6 +37,9 @@ há uma etapa de limpeza com possibilidade de repetição se o banco falhar.
 - Após pagamento confirmado, limpar o carrinho da conta antes de prosseguir,
   desde que corresponda à versão enviada ao pagamento. Se houver alterações
   concorrentes, preservar os itens e avisar para revisão antes de outra compra.
+- No fluxo de simulação, emitir os ingressos no banco antes de limpar o
+  carrinho. A compra deve conter até 100 ingressos; o limite é verificado antes
+  de iniciar o pagamento. Falha de emissão permite repetição sem nova cobrança.
 
 ## 5. Cálculo do total
 

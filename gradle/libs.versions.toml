@@ -25,6 +25,7 @@ mockk = "1.13.17"
 coil = "2.7.0"
 robolectric = "4.17"
 androidxTestCore = "1.6.1"
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -74,6 +75,7 @@ coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

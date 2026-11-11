@@ -39,6 +39,13 @@ import com.innaval.ingresosnamao.BuildConfig
 import com.innaval.ingresosnamao.feature.events.presentation.EventsRoute
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketsRoute
+import com.innaval.ingresosnamao.feature.ticket.presentation.ReceiptRoute
+import com.innaval.ingresosnamao.feature.ticket.presentation.TicketDetailRoute
+import com.innaval.ingresosnamao.feature.ticket.domain.IssueTicketsUseCase
+import com.innaval.ingresosnamao.feature.ticket.domain.PurchaseItem
+import com.innaval.ingresosnamao.feature.ticket.domain.TicketError
+import com.innaval.ingresosnamao.feature.ticket.domain.TicketResult
+import com.innaval.ingresosnamao.feature.ticket.domain.validPurchaseItems
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -48,11 +55,16 @@ private object Routes {
     const val CART = "cart/{userId}"
     const val PAYMENT = "payment/{userId}/{amount}/{fingerprint}"
     const val CLEANUP = "payment-cleanup/{userId}/{fingerprint}"
-    const val TICKETS = "tickets"
+    const val TICKETS = "tickets/{userId}"
+    const val RECEIPT = "receipt/{userId}/{reference}"
+    const val TICKET = "ticket/{userId}/{ticketId}"
     fun events(userId: String) = "events/${Uri.encode(userId)}"
     fun cart(userId: String) = "cart/${Uri.encode(userId)}"
     fun payment(userId: String, amountCents: Long, fingerprint: String) = "payment/${Uri.encode(userId)}/$amountCents/$fingerprint"
     fun cleanup(userId: String, fingerprint: String) = "payment-cleanup/${Uri.encode(userId)}/$fingerprint"
+    fun tickets(userId: String) = "tickets/${Uri.encode(userId)}"
+    fun receipt(userId: String, reference: String) = "receipt/${Uri.encode(userId)}/${Uri.encode(reference)}"
+    fun ticket(userId: String, ticketId: String) = "ticket/${Uri.encode(userId)}/${Uri.encode(ticketId)}"
 }
 
 /** Features never navigate to each other; every cross-feature transition is wired here. */
@@ -74,6 +86,7 @@ fun AppNavHost() {
             var adding by remember { mutableStateOf(false) }
             var error by remember { mutableStateOf<String?>(null) }
             Column {
+                TextButton(onClick = { nav.navigate(Routes.tickets(userId)) }) { Text("Meus ingressos") }
                 val attempt = (paymentState as? PaymentState.Active)?.attempt
                 if (BuildConfig.DEBUG && attempt?.status == AttemptStatus.APPROVED && attempt.order.userId == userId) {
                     TextButton(onClick = { nav.navigate(Routes.cleanup(userId, attempt.order.fingerprint)) }) {
@@ -134,6 +147,11 @@ fun AppNavHost() {
                     val cart = result.value
                     if (cartFingerprint(cart) != fingerprint || cart.totalCents != amount) {
                         ErrorState("O carrinho foi alterado. Volte e tente novamente.", { nav.popBackStack() })
+                    } else if (!validPurchaseItems(cart.items.map {
+                            PurchaseItem(it.eventId, it.eventName, it.unitPriceCents, it.quantity)
+                        }, cart.totalCents)
+                    ) {
+                        ErrorState("A compra deve conter até 100 ingressos e um total válido.", { nav.popBackStack() })
                     } else {
                         PaymentRoute(
                             order = PaymentOrder(userId, fingerprint, cart.items.map {
@@ -157,27 +175,74 @@ fun AppNavHost() {
             val userId = requireNotNull(entry.arguments?.getString("userId"))
             val fingerprint = requireNotNull(entry.arguments?.getString("fingerprint"))
             val payments: PaymentRepository = koinInject()
+            val issueTickets: IssueTicketsUseCase = koinInject()
             val paymentState by payments.state.collectAsStateWithLifecycle()
             var acknowledgementError by remember { mutableStateOf(false) }
+            var issueResult by remember(userId, fingerprint) { mutableStateOf<TicketResult<Unit>?>(null) }
+            var issueRetry by remember(userId, fingerprint) { mutableStateOf(0) }
             BackHandler {}
             val attempt = (paymentState as? PaymentState.Active)?.attempt
-            if (!BuildConfig.DEBUG || attempt?.status != AttemptStatus.APPROVED ||
-                attempt.order.userId != userId || attempt.order.fingerprint != fingerprint
-            ) {
+            val purchase = approvedSimulation(BuildConfig.DEBUG, userId, fingerprint, attempt)
+            if (paymentState is PaymentState.StorageError) {
+                Column {
+                    Text("Falha ao salvar o estado do pagamento. Os ingressos de teste já emitidos podem ser consultados; não pague novamente.")
+                    TextButton(onClick = { nav.navigate(Routes.tickets(userId)) { popUpTo(Routes.EVENTS) } }) {
+                        Text("Ver ingressos")
+                    }
+                }
+            } else if (purchase == null) {
                 ErrorState("Não há aprovação de teste para este carrinho.", { nav.popBackStack() })
-            } else if (acknowledgementError) {
-                ErrorState("Não foi possível concluir o registro do pagamento de teste.", {
-                    acknowledgementError = !payments.acknowledgeApproved(userId, fingerprint)
-                    if (!acknowledgementError) nav.navigate(Routes.TICKETS) { popUpTo(Routes.EVENTS) }
-                })
             } else {
-                CartCleanupRoute(userId, fingerprint, onComplete = {
-                    if (payments.acknowledgeApproved(userId, fingerprint)) {
-                        nav.navigate(Routes.TICKETS) { popUpTo(Routes.EVENTS) }
-                    } else acknowledgementError = true
-                })
+                val reference = purchase.reference
+                LaunchedEffect(reference, issueRetry) {
+                    issueResult = null
+                    issueResult = when (val result = issueTickets(purchase)) {
+                        is TicketResult.Success -> TicketResult.Success(Unit)
+                        is TicketResult.Failure -> result
+                    }
+                }
+                if (acknowledgementError) {
+                    ErrorState("Não foi possível concluir o registro do pagamento de teste.", {
+                        acknowledgementError = !payments.acknowledgeApproved(userId, fingerprint)
+                        if (!acknowledgementError) nav.navigate(Routes.receipt(userId, reference)) { popUpTo(Routes.EVENTS) }
+                    })
+                } else when (val result = issueResult) {
+                    null -> LoadingState()
+                    is TicketResult.Failure -> ErrorState(
+                        when (result.error) {
+                            TicketError.INVALID_PURCHASE -> "Dados da compra inválidos ou limite de 100 ingressos excedido; não pague novamente."
+                            TicketError.CONFLICT -> "Os dados da compra conflitam com uma emissão existente; não pague novamente."
+                            TicketError.STORAGE -> "Falha ao salvar os ingressos de teste. Tente novamente sem pagar outra vez."
+                        },
+                        { issueRetry++ },
+                    )
+                    is TicketResult.Success -> CartCleanupRoute(userId, fingerprint, onComplete = {
+                        if (payments.acknowledgeApproved(userId, fingerprint)) {
+                            nav.navigate(Routes.receipt(userId, reference)) { popUpTo(Routes.EVENTS) }
+                        } else acknowledgementError = true
+                    })
+                }
             }
         }
-        composable(Routes.TICKETS) { TicketsRoute() }
+        composable(Routes.TICKETS, arguments = listOf(navArgument("userId") { type = NavType.StringType })) { entry ->
+            val userId = requireNotNull(entry.arguments?.getString("userId"))
+            TicketsRoute(userId, onReceipt = { nav.navigate(Routes.receipt(userId, it)) }, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.RECEIPT, arguments = listOf(
+            navArgument("userId") { type = NavType.StringType },
+            navArgument("reference") { type = NavType.StringType },
+        )) { entry ->
+            val userId = requireNotNull(entry.arguments?.getString("userId"))
+            val reference = requireNotNull(entry.arguments?.getString("reference"))
+            ReceiptRoute(userId, reference, onTicket = { nav.navigate(Routes.ticket(userId, it)) }, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.TICKET, arguments = listOf(
+            navArgument("userId") { type = NavType.StringType },
+            navArgument("ticketId") { type = NavType.StringType },
+        )) { entry ->
+            val userId = requireNotNull(entry.arguments?.getString("userId"))
+            val ticketId = requireNotNull(entry.arguments?.getString("ticketId"))
+            TicketDetailRoute(userId, ticketId, onBack = { nav.popBackStack() })
+        }
     }
 }

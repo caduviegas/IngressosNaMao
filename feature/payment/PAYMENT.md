@@ -26,4 +26,6 @@ Ao expirar a espera, ou se o processo for encerrado após persistir a tentativa,
 
 Esta versão não oferece desbloqueio manual. Um cancelamento, erro ou retorno perdido pode impedir novos testes até a tentativa ser conciliada; apagar dados ou reinstalar remove a proteção e não é seguro para pagamentos reais. Após uma aprovação simulada, a tela de eventos permite retomar a limpeza do carrinho caso o app seja interrompido antes da conclusão.
 
+O aplicativo limita a compra a 100 ingressos antes de iniciar o pagamento. Após a aprovação simulada, registra os ingressos localmente antes de limpar o carrinho e reconhecer a tentativa. Esses ingressos são identificados como testes e não têm validade real.
+
 Fontes: [pagamento](https://docs.cielo.com.br/cielo-smart/docs/pagamento), [retorno](https://docs.cielo.com.br/cielo-smart/docs/recuperando-dados), [erros](https://docs.cielo.com.br/cielo-smart/docs/codigos-de-erro), [consulta](https://docs.cielo.com.br/cielo-smart/docs/consulta-de-pedido-avulso), [emulador](https://docs.cielo.com.br/cielo-smart/docs/realizando-pagamentos), [FAQ](https://docs.cielo.com.br/cielo-smart/docs/integracao-via-deep-link).
