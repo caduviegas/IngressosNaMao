@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +28,8 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosTextField
+import com.innaval.ingresosnamao.core.ui.components.IngressosProgressIndicator
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.auth.domain.AuthError
 import com.innaval.ingresosnamao.feature.auth.domain.AuthResult
@@ -133,22 +133,21 @@ fun AuthScreen(
             AuthField("Endereço", state.address, onAddress, Field.ADDRESS in state.invalidFields, enabled)
         }
         if (state.stage == AuthStage.LOGIN || state.stage == AuthStage.REGISTER) {
-            OutlinedTextField(
+            IngressosTextField(
                 value = state.password,
                 onValueChange = onPassword,
-                label = { Text("Senha") },
+                label = "Senha",
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError = Field.PASSWORD in state.invalidFields,
-                supportingText = if (Field.PASSWORD in state.invalidFields) {
-                    { Text(if (state.stage == AuthStage.REGISTER) "Use de 6 a 128 caracteres." else "Informe a senha.") }
-                } else null,
+                errorMessage = if (Field.PASSWORD in state.invalidFields)
+                    if (state.stage == AuthStage.REGISTER) "Use de 6 a 128 caracteres." else "Informe a senha."
+                else null,
                 enabled = enabled,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
         state.error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
-        if (state.loading) CircularProgressIndicator()
+        if (state.loading) IngressosProgressIndicator()
         when (state.stage) {
             AuthStage.LOGIN -> {
                 IngressosButton("Entrar", onLogin, enabled = enabled)
@@ -181,16 +180,15 @@ private fun AuthField(
     enabled: Boolean,
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
-    OutlinedTextField(
-        value = value, onValueChange = onChange, label = { Text(label) },
+    IngressosTextField(
+        value = value, onValueChange = onChange, label = label,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        isError = invalid,
-        supportingText = if (invalid) {
-            { Text(when (label) {
+        errorMessage = if (invalid) {
+            when (label) {
                 "Nome" -> "Informe um nome com até 100 caracteres."
                 "Endereço" -> "Informe um endereço com até 300 caracteres."
                 else -> "Informe um e-mail válido com até 254 caracteres."
-            }) }
+            }
         } else null,
         enabled = enabled, modifier = Modifier.fillMaxWidth(),
     )

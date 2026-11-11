@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +24,10 @@ import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.innaval.ingresosnamao.core.ui.components.ErrorState
+import com.innaval.ingresosnamao.core.ui.components.EmptyState
+import com.innaval.ingresosnamao.core.ui.components.IngressosCard
+import com.innaval.ingresosnamao.core.ui.components.IngressosTopBar
+import com.innaval.ingresosnamao.core.ui.components.IngressosProgressIndicator
 import com.innaval.ingresosnamao.core.ui.components.LoadingState
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.events.domain.EventsError
@@ -41,7 +43,9 @@ fun EventsRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Column {
-        TextButton(onClick = onCartClick, enabled = !adding) { Text("Ver carrinho") }
+        IngressosTopBar(title = "Eventos", actions = {
+            TextButton(onClick = onCartClick, enabled = !adding) { Text("Ver carrinho") }
+        })
         if (adding) Text("Adicionando ao carrinho…", Modifier.padding(IngressosTheme.spacing.md))
         cartError?.let { Text(it, Modifier.padding(IngressosTheme.spacing.md), color = MaterialTheme.colorScheme.error) }
         Box(Modifier.weight(1f)) {
@@ -62,9 +66,7 @@ fun EventsScreen(
         is EventsUiState.Error -> ErrorState(errorMessage(state.error), onRetry)
         is EventsUiState.Empty -> Column(Modifier.fillMaxSize()) {
             if (state.possiblyStale) StaleNotice(onRetry)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nenhum evento disponível no momento.")
-            }
+            EmptyState("Nenhum evento disponível no momento.")
         }
         is EventsUiState.Content -> LazyColumn(
             contentPadding = PaddingValues(IngressosTheme.spacing.md),
@@ -72,7 +74,7 @@ fun EventsScreen(
         ) {
             if (state.possiblyStale) item { StaleNotice(onRetry) }
             items(state.events, key = { it.id }) { event ->
-                Card(
+                IngressosCard(
                     onClick = { onEventClick(event.id, event.name, event.priceCents) },
                     enabled = !adding,
                     modifier = Modifier.fillMaxWidth(),
@@ -87,7 +89,7 @@ fun EventsScreen(
                             when (painter.state) {
                                 is AsyncImagePainter.State.Loading, is AsyncImagePainter.State.Empty ->
                                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        CircularProgressIndicator()
+                                        IngressosProgressIndicator(label = "Carregando imagem de ${event.name}")
                                     }
                                 is AsyncImagePainter.State.Error ->
                                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

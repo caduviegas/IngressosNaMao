@@ -11,13 +11,15 @@ fun IngressosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val extras = ExtraColors(success = if (darkTheme) Palette.SuccessDark else Palette.Success)
+    val extras = if (darkTheme) DarkExtraColors else LightExtraColors
     CompositionLocalProvider(
         LocalSpacing provides Spacing(),
         LocalExtraColors provides extras,
     ) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColors else LightColors,
+            typography = IngressosTypography,
+            shapes = IngressosShapes,
             content = content,
         )
     }

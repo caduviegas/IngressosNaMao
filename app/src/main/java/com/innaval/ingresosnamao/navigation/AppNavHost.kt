@@ -142,16 +142,16 @@ fun AppNavHost() {
             LaunchedEffect(userId, fingerprint) { cartResult = getCart(userId) }
             when (val result = cartResult) {
                 null -> LoadingState()
-                is CartResult.Failure -> ErrorState(cartErrorMessage(result.error), { nav.popBackStack() })
+                is CartResult.Failure -> ErrorState(cartErrorMessage(result.error), { nav.popBackStack() }, retryLabel = "Voltar")
                 is CartResult.Success -> {
                     val cart = result.value
                     if (cartFingerprint(cart) != fingerprint || cart.totalCents != amount) {
-                        ErrorState("O carrinho foi alterado. Volte e tente novamente.", { nav.popBackStack() })
+                        ErrorState("O carrinho foi alterado. Volte e tente novamente.", { nav.popBackStack() }, retryLabel = "Voltar")
                     } else if (!validPurchaseItems(cart.items.map {
                             PurchaseItem(it.eventId, it.eventName, it.unitPriceCents, it.quantity)
                         }, cart.totalCents)
                     ) {
-                        ErrorState("A compra deve conter até 100 ingressos e um total válido.", { nav.popBackStack() })
+                        ErrorState("A compra deve conter até 100 ingressos e um total válido.", { nav.popBackStack() }, retryLabel = "Voltar")
                     } else {
                         PaymentRoute(
                             order = PaymentOrder(userId, fingerprint, cart.items.map {
@@ -191,7 +191,7 @@ fun AppNavHost() {
                     }
                 }
             } else if (purchase == null) {
-                ErrorState("Não há aprovação de teste para este carrinho.", { nav.popBackStack() })
+                ErrorState("Não há aprovação de teste para este carrinho.", { nav.popBackStack() }, retryLabel = "Voltar")
             } else {
                 val reference = purchase.reference
                 LaunchedEffect(reference, issueRetry) {

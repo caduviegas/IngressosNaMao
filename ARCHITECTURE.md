@@ -97,13 +97,14 @@ feature/<name>/src/main/java/com/innaval/ingresosnamao/feature/<name>/
 
 - `theme/Color.kt`: private palette → Material3 `ColorScheme` (light/dark). Features never reference raw colors.
 - `theme/Tokens.kt`: `Spacing`, `ExtraColors` (tokens Material lacks) via `CompositionLocal`s.
+- `theme/Typography.kt` and `theme/Shape.kt`: shared Material3 type scale and rounded shapes.
 - `theme/Theme.kt`: `IngressosTheme { }` wraps `MaterialTheme` and provides tokens; access with
   `MaterialTheme.colorScheme/typography/shapes` and `IngressosTheme.spacing/extras`.
-- `components/`: opinionated, stateless building blocks (`IngressosButton`, `LoadingState`, `ErrorState`) built only
-  from tokens. Rule: if two features need a composable, it moves here; feature-specific UI stays in the feature.
+- `components/`: stateless buttons, fields, cards, top bars and loading/error/empty states, built from shared tokens.
+  Rule: if two features need a composable, it moves here; feature-specific UI stays in the feature.
 - `format/PriceFormatter.kt`: formats integer cents as BRL without floating-point arithmetic.
 - `:core:ui` exposes Compose/Material3 as `api`, so features get one consistent UI dependency.
-- Add next: typography/shapes definitions, icon set, string resources, previews, screenshot tests.
+- Contract, accessibility rules and usage: [`core/ui/DESIGN_SYSTEM.md`](core/ui/DESIGN_SYSTEM.md).
 
 ## Next steps
 

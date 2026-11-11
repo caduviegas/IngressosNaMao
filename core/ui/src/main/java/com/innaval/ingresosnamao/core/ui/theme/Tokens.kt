@@ -17,7 +17,12 @@ data class Spacing(
 
 /** Tokens that Material3's ColorScheme doesn't cover. */
 @Immutable
-data class ExtraColors(val success: Color)
+data class ExtraColors(
+    val success: Color,
+    val onSuccess: Color = Color.White,
+    val successContainer: Color = Color(0xFFA3F7A5),
+    val onSuccessContainer: Color = Color(0xFF002107),
+)
 
 internal val LocalSpacing = staticCompositionLocalOf { Spacing() }
 internal val LocalExtraColors = staticCompositionLocalOf { ExtraColors(Palette.Success) }

@@ -3,7 +3,6 @@ package com.innaval.ingresosnamao.feature.payment.presentation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -13,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosTextField
 import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.payment.domain.*
@@ -68,9 +68,9 @@ fun PaymentRoute(
             Text("O pagamento está desabilitado nesta versão.")
         } else when (val current = state) {
             PaymentState.Ready -> {
-                OutlinedTextField(clientId, { clientId = it }, label = { Text("Client ID de teste") }, singleLine = true)
-                OutlinedTextField(
-                    accessToken, { accessToken = it }, label = { Text("Access token de teste") },
+                IngressosTextField(clientId, { clientId = it }, label = "Client ID de teste", singleLine = true)
+                IngressosTextField(
+                    accessToken, { accessToken = it }, label = "Access token de teste",
                     singleLine = true, visualTransformation = PasswordVisualTransformation(),
                 )
                 IngressosButton("Abrir emulador", {

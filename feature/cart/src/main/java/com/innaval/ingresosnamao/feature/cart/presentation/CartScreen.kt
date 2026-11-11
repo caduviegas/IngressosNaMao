@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,9 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.innaval.ingresosnamao.core.ui.components.ErrorState
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosCard
 import com.innaval.ingresosnamao.core.ui.components.LoadingState
 import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
@@ -87,15 +89,23 @@ fun CartScreen(
                 state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
             }
             items(cart.items, key = { it.eventId }) { item ->
-                Card(Modifier.fillMaxWidth()) {
+                IngressosCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(IngressosTheme.spacing.md)) {
                         Text(item.eventName, style = MaterialTheme.typography.titleMedium)
                         Text("Unitário: ${formatPriceBrl(item.unitPriceCents)}")
                         Text("Subtotal: ${formatPriceBrl(item.unitPriceCents * item.quantity)}")
                         Row {
-                            TextButton(onClick = { onQuantity(item, -1) }, enabled = !state.busy && item.quantity > 1) { Text("−") }
+                            TextButton(
+                                onClick = { onQuantity(item, -1) },
+                                enabled = !state.busy && item.quantity > 1,
+                                modifier = Modifier.semantics { contentDescription = "Diminuir quantidade de ${item.eventName}" },
+                            ) { Text("−") }
                             Text("${item.quantity}", modifier = Modifier.padding(IngressosTheme.spacing.md))
-                            TextButton(onClick = { onQuantity(item, 1) }, enabled = !state.busy && item.quantity < Int.MAX_VALUE) { Text("+") }
+                            TextButton(
+                                onClick = { onQuantity(item, 1) },
+                                enabled = !state.busy && item.quantity < Int.MAX_VALUE,
+                                modifier = Modifier.semantics { contentDescription = "Aumentar quantidade de ${item.eventName}" },
+                            ) { Text("+") }
                             TextButton(onClick = { onRemove(item) }, enabled = !state.busy) { Text("Remover") }
                         }
                     }
