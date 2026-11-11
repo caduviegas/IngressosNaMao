@@ -1,47 +1,120 @@
 package com.innaval.ingresosnamao.feature.cart.presentation
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
+import com.innaval.ingresosnamao.core.ui.components.ErrorState
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.LoadingState
+import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
+import com.innaval.ingresosnamao.feature.cart.domain.CartError
 import com.innaval.ingresosnamao.feature.cart.domain.CartItem
-import com.innaval.ingresosnamao.feature.cart.domain.ObserveCartUseCase
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
-data class CartUiState(val items: List<CartItem> = emptyList()) {
-    val totalCents: Long get() = items.sumOf { it.unitPriceCents * it.quantity }
-}
-
-class CartViewModel(observeCart: ObserveCartUseCase) : ViewModel() {
-    val state: StateFlow<CartUiState> = observeCart()
-        .map(::CartUiState)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CartUiState())
-}
-
-/** [onCheckout] receives the total in cents; :app maps it to the payment destination. */
 @Composable
-fun CartRoute(onCheckout: (totalCents: Long) -> Unit, viewModel: CartViewModel = koinViewModel()) {
+fun CartRoute(
+    userId: String,
+    onCheckout: (totalCents: Long, fingerprint: String) -> Unit,
+    onBack: () -> Unit,
+    viewModel: CartViewModel = koinViewModel(key = userId, parameters = { parametersOf(userId) }),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    CartScreen(state) { onCheckout(state.totalCents) }
+    CartScreen(state, viewModel::changeQuantity, viewModel::remove, { viewModel.checkout(onCheckout) }, onBack, viewModel::retry)
 }
 
 @Composable
-fun CartScreen(state: CartUiState, onCheckout: () -> Unit) {
-    Column(Modifier.padding(IngressosTheme.spacing.md)) {
-        Text("Carrinho", style = MaterialTheme.typography.headlineSmall)
-        state.items.forEach { Text("${it.quantity}x ${it.eventName}") }
-        IngressosButton("Finalizar compra", onCheckout, enabled = state.items.isNotEmpty())
+fun CartCleanupRoute(
+    userId: String,
+    fingerprint: String,
+    onComplete: () -> Unit,
+    viewModel: CartCleanupViewModel = koinViewModel(
+        key = "cleanup:$userId:$fingerprint", parameters = { parametersOf(userId, fingerprint) }
+    ),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state) { if (state == CartCleanupState.Complete) onComplete() }
+    when (val current = state) {
+        CartCleanupState.Loading, CartCleanupState.Complete -> LoadingState()
+        is CartCleanupState.Error -> {
+            if (current.error == CartError.CART_CHANGED) {
+                Column(Modifier.padding(IngressosTheme.spacing.md)) {
+                    Text("Pagamento confirmado. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
+                    IngressosButton("Continuar", onComplete)
+                }
+            } else {
+                ErrorState("Pagamento confirmado, mas não foi possível limpar o carrinho. Tente novamente.", viewModel::retry)
+            }
+        }
     }
+}
+
+@Composable
+fun CartScreen(
+    state: CartUiState,
+    onQuantity: (CartItem, Int) -> Unit,
+    onRemove: (CartItem) -> Unit,
+    onCheckout: () -> Unit,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    val cart = state.cart
+    when {
+        state.loading -> LoadingState()
+        cart == null -> ErrorState(cartErrorMessage(state.error ?: CartError.STORAGE), onRetry)
+        else -> LazyColumn(
+            contentPadding = PaddingValues(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+        ) {
+            item {
+                Text("Carrinho", style = MaterialTheme.typography.headlineSmall)
+                if (cart.items.isEmpty()) Text("Seu carrinho está vazio.")
+                state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
+            }
+            items(cart.items, key = { it.eventId }) { item ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+                        Text(item.eventName, style = MaterialTheme.typography.titleMedium)
+                        Text("Unitário: ${formatPriceBrl(item.unitPriceCents)}")
+                        Text("Subtotal: ${formatPriceBrl(item.unitPriceCents * item.quantity)}")
+                        Row {
+                            TextButton(onClick = { onQuantity(item, -1) }, enabled = !state.busy && item.quantity > 1) { Text("−") }
+                            Text("${item.quantity}", modifier = Modifier.padding(IngressosTheme.spacing.md))
+                            TextButton(onClick = { onQuantity(item, 1) }, enabled = !state.busy && item.quantity < Int.MAX_VALUE) { Text("+") }
+                            TextButton(onClick = { onRemove(item) }, enabled = !state.busy) { Text("Remover") }
+                        }
+                    }
+                }
+            }
+            item {
+                Text("Total: ${formatPriceBrl(cart.totalCents)}", style = MaterialTheme.typography.titleMedium)
+                IngressosButton("Finalizar compra", onCheckout, enabled = cart.items.isNotEmpty() && !state.busy)
+                TextButton(onClick = onBack, enabled = !state.busy) { Text("Continuar comprando") }
+            }
+        }
+    }
+}
+
+fun cartErrorMessage(error: CartError): String = when (error) {
+    CartError.INVALID_ITEM -> "Os dados do carrinho são inválidos."
+    CartError.NOT_FOUND -> "O item não está mais no carrinho."
+    CartError.LIMIT_EXCEEDED -> "Quantidade ou total excede o limite permitido."
+    CartError.FREE_CHECKOUT_UNSUPPORTED -> "A finalização de ingressos gratuitos ainda não é suportada."
+    CartError.CART_CHANGED -> "O carrinho foi alterado."
+    CartError.STORAGE -> "Não foi possível acessar o carrinho. Tente novamente."
 }

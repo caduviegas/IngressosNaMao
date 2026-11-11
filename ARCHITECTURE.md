@@ -14,7 +14,7 @@ Base package: `com.innaval.ingresosnamao`.
         │ │      │ │       │ │      │ │       │ │
         │ └──────┼─┼───────┼─┼──────┼─┼───────┘ │   (every feature → :core:ui, :core:common)
         ▼        ▼ ▼       ▼ ▼      ▼ ▼         ▼
-   :core:network (events, payment)           :core:database (ticket)
+   :core:network (payment)                   :core:database (cart, ticket)
         │                                         │
         └───────────────► :core:common ◄──────────┘
                               ▲
@@ -28,8 +28,9 @@ Base package: `com.innaval.ingresosnamao`.
 | `:core:network` | `:core:common` | `:core:database`, `:core:ui`, features |
 | `:core:database` | `:core:common` | `:core:network`, `:core:ui`, features |
 | `:feature:auth` | `:core:common`, `:core:ui`, Firebase Authentication and Firestore | other features, `:core:database` |
-| `:feature:events` / `payment` | `:core:common`, `:core:ui`, `:core:network` | other features, `:core:database` |
-| `:feature:cart` | `:core:common`, `:core:ui` (add `:core:database` when persisting) | other features |
+| `:feature:events` | `:core:common`, `:core:ui`, Firebase Remote Config | other features, `:core:database` |
+| `:feature:payment` | `:core:common`, `:core:ui`, `:core:network` | other features, `:core:database` |
+| `:feature:cart` | `:core:common`, `:core:ui`, `:core:database` | other features |
 | `:feature:ticket` | `:core:common`, `:core:ui`, `:core:database` | other features |
 | `:app` | everything | – |
 
@@ -70,7 +71,7 @@ feature/<name>/src/main/java/com/innaval/ingresosnamao/feature/<name>/
 - Presentation: `EventsViewModel`, `EventsUiState` (sealed/data class), `EventsRoute`/`EventsScreen`.
 - Only `di/` module val and `presentation/*Route` are public; everything in `data/` is `internal`.
 - Money in cents (`Long`); shared infrastructure uses `AppResult`/`AppError` and injected dispatchers.
-  Auth uses its own typed `AuthResult`/`AuthError` for provider-specific failures.
+  Auth, events and cart use their own typed results and errors.
 
 ## Architecture decisions
 
@@ -100,13 +101,18 @@ feature/<name>/src/main/java/com/innaval/ingresosnamao/feature/<name>/
   `MaterialTheme.colorScheme/typography/shapes` and `IngressosTheme.spacing/extras`.
 - `components/`: opinionated, stateless building blocks (`IngressosButton`, `LoadingState`, `ErrorState`) built only
   from tokens. Rule: if two features need a composable, it moves here; feature-specific UI stays in the feature.
+- `format/PriceFormatter.kt`: formats integer cents as BRL without floating-point arithmetic.
 - `:core:ui` exposes Compose/Material3 as `api`, so features get one consistent UI dependency.
 - Add next: typography/shapes definitions, icon set, string resources, previews, screenshot tests.
 
 ## Next steps
 
-Replace placeholder endpoints; add auth token interceptor in `:core:network`; persist cart in Room; add unit tests per
+Replace placeholder endpoints; add auth token interceptor in `:core:network`; add unit tests per
 UseCase/ViewModel; introduce Detekt/ktlint and a module-graph check (e.g. Gradle `dependencyGuard` or custom task).
 
 Authentication flow, Firebase setup, Firestore rules and test strategy are documented in
 [`feature/auth/AUTHENTICATION.md`](feature/auth/AUTHENTICATION.md).
+The events Remote Config contract, cache behavior and test strategy are documented in
+[`feature/events/EVENTS.md`](feature/events/EVENTS.md).
+The cart's persistence, account isolation and checkout behavior are documented in
+[`feature/cart/CART.md`](feature/cart/CART.md).

@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Source
 import com.innaval.ingresosnamao.feature.auth.domain.AuthError
 import com.innaval.ingresosnamao.feature.auth.domain.AuthRepository
@@ -39,7 +40,17 @@ internal class FirestoreProfileDataSource {
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
     suspend fun get(user: AuthUser): UserProfile? {
-        val snapshot = db.collection("users").document(user.id).get(Source.SERVER).await()
+        val document = db.collection("users").document(user.id)
+        val snapshot = readWithConfirmedCache(
+            server = { document.get(Source.SERVER).await() },
+            cache = { document.get(Source.CACHE).await() },
+            confirmed = { it.exists() && !it.metadata.hasPendingWrites() },
+            canUseCache = {
+                it is FirebaseFirestoreException &&
+                    (it.code == FirebaseFirestoreException.Code.UNAVAILABLE ||
+                        it.code == FirebaseFirestoreException.Code.DEADLINE_EXCEEDED)
+            },
+        )
         if (!snapshot.exists()) return null
         val profile = UserProfile(
             name = requireNotNull(snapshot.getString("name")),
@@ -47,6 +58,7 @@ internal class FirestoreProfileDataSource {
             address = requireNotNull(snapshot.getString("address")),
         )
         require(AuthValidation.profile(profile.name, profile.email, profile.address).isEmpty())
+        require(profile.email.equals(user.email, ignoreCase = true))
         return profile
     }
 
@@ -55,6 +67,28 @@ internal class FirestoreProfileDataSource {
             mapOf("name" to profile.name, "email" to profile.email, "address" to profile.address)
         ).await()
     }
+}
+
+internal suspend fun <T> readWithConfirmedCache(
+    server: suspend () -> T,
+    cache: suspend () -> T,
+    confirmed: (T) -> Boolean,
+    canUseCache: (Exception) -> Boolean,
+): T = try {
+    server()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    if (!canUseCache(e)) throw e
+    val cached = try {
+        cache()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (cacheError: Exception) {
+        throw e
+    }
+    if (!confirmed(cached)) throw e
+    cached
 }
 
 internal class AuthRepositoryImpl(

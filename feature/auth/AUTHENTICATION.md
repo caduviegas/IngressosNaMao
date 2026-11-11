@@ -44,7 +44,10 @@ confirmação do perfil.
   primeira entrada, caso não exista perfil, solicitar nome e endereço antes de
   concluir. Contas já existentes não são vinculadas automaticamente.
 - Uma sessão existente é verificada ao abrir o aplicativo. A leitura do perfil
-  consulta o servidor; indisponibilidade não deve ser confundida com ausência.
+  consulta o servidor; em indisponibilidade ou timeout pode usar um perfil
+  válido previamente confirmado no cache, sem escritas pendentes e com e-mail
+  correspondente à sessão. Sem cache válido apresenta erro, não ausência.
+  Revogações e mudanças da conta não podem ser verificadas enquanto offline.
 - O Firestore autoriza leitura e escrita apenas ao próprio UID. Campos do
   documento têm tipos e tamanho validados também nas regras.
 - Apenas uma operação de autenticação pode estar ativa por vez. Erros podem ser

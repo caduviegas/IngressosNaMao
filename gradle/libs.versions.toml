@@ -22,6 +22,9 @@ googleServices = "4.4.2"
 credentials = "1.3.0"
 googleId = "1.1.1"
 mockk = "1.13.17"
+coil = "2.7.0"
+robolectric = "4.17"
+androidxTestCore = "1.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -62,11 +65,15 @@ androidx-compose-material-icons = { group = "androidx.compose.material", name = 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+firebase-config = { group = "com.google.firebase", name = "firebase-config" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 google-id = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

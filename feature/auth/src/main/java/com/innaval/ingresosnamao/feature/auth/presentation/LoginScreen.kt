@@ -38,11 +38,11 @@ import kotlinx.coroutines.CancellationException
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun LoginRoute(onLoggedIn: () -> Unit, viewModel: AuthViewModel = koinViewModel()) {
+fun LoginRoute(onLoggedIn: (userId: String) -> Unit, viewModel: AuthViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     LaunchedEffect(state.stage) {
-        if (state.stage == AuthStage.AUTHENTICATED) onLoggedIn()
+        if (state.stage == AuthStage.AUTHENTICATED) state.user?.id?.let(onLoggedIn)
     }
     AuthScreen(
         state = state,
