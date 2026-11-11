@@ -24,3 +24,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "IngresosNaMao"
 include(":app")
+
+include(
+    ":core:common", ":core:ui", ":core:network", ":core:database",
+    ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket",
+)
