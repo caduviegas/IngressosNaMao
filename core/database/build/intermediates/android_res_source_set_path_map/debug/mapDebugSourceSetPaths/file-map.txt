@@ -1,0 +1,9 @@
+com.innaval.ingresosnamao.core.database-pngs-0 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/generated/res/pngs/debug
+com.innaval.ingresosnamao.core.database-updated_navigation_xml-1 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/generated/updated_navigation_xml/debug
+com.innaval.ingresosnamao.core.database-mergeDebugResources-2 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.innaval.ingresosnamao.core.database-mergeDebugResources-3 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.innaval.ingresosnamao.core.database-debug-4 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/intermediates/merged_res/debug/mergeDebugResources
+com.innaval.ingresosnamao.core.database-debug-5 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/build/intermediates/packaged_res/debug/packageDebugResources
+com.innaval.ingresosnamao.core.database-debug-6 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/src/debug/res
+com.innaval.ingresosnamao.core.database-main-7 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/core/database/src/main/res
+gradleHome-0 /Users/eduardoviegas/.gradle

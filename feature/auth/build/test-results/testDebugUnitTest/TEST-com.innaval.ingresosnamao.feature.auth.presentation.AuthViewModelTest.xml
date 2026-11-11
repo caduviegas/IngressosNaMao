@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-11T15:59:14.763Z" hostname="MacBook-Air-de-Eduardo.local" time="0.168">
+  <properties/>
+  <testcase name="registrationValidationChecksBoundaries" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.123"/>
+  <testcase name="missingGoogleProfileRequiresCompletion" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.01"/>
+  <testcase name="invalidInputsDoNotCallRepository" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.007"/>
+  <testcase name="loginWaitsForServerProfileBeforeAuthenticating" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.005"/>
+  <testcase name="useCasePropagatesCancellation" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.002"/>
+  <testcase name="registrationProfileFailureCanBeRetriedWithoutRecreatingAccount" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.007"/>
+  <testcase name="existingSessionWithReadFailureCanRetryWithoutAssumingMissingProfile" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.003"/>
+  <testcase name="duplicateSubmitIsIgnoredAndErrorsAreVisible" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.007"/>
+  <testcase name="googleCancellationIsNotSuccess" classname="com.innaval.ingresosnamao.feature.auth.presentation.AuthViewModelTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
