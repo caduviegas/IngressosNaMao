@@ -10,7 +10,8 @@ class IngressosApp : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@IngressosApp)
-            modules(appModules)
+            allowOverride(false)
+            modules(appModules())
         }
     }
 }

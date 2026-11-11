@@ -11,7 +11,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.koin.android.ext.koin.androidContext
 
-val paymentModule = module {
+fun paymentModule() = module {
     single<PaymentGateway> { CieloGateway(androidContext()) }
     single<PaymentRepository> { PaymentRepositoryImpl(androidContext(), get()) }
     factoryOf(::StartPaymentUseCase)

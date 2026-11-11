@@ -4,6 +4,6 @@ import com.innaval.ingresosnamao.core.common.dispatchers.DefaultDispatcherProvid
 import com.innaval.ingresosnamao.core.common.dispatchers.DispatcherProvider
 import org.koin.dsl.module
 
-val commonModule = module {
+fun commonModule() = module {
     single<DispatcherProvider> { DefaultDispatcherProvider() }
 }

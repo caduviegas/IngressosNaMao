@@ -9,7 +9,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
-val ticketModule = module {
+fun ticketModule() = module {
     single<TicketRepository> { TicketRepositoryImpl(get(), get(), get()) }
     single<QrCodeGenerator> { ZxingQrCodeGenerator(get()) }
     factoryOf(::IssueTicketsUseCase)

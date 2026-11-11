@@ -11,14 +11,16 @@ Base package: `com.innaval.ingresosnamao`.
           ▼      ▼       ▼        ▼         ▼
      :feature: :feature: :feature: :feature: :feature:
        auth     events    cart    payment    ticket
-        │ │      │ │       │ │      │ │       │ │
-        │ └──────┼─┼───────┼─┼──────┼─┼───────┘ │   (every feature → :core:ui, :core:common)
-        ▼        ▼ ▼       ▼ ▼      ▼ ▼         ▼
-   :core:network (payment)                   :core:database (cart, ticket)
-        │                                         │
-        └───────────────► :core:common ◄──────────┘
-                              ▲
-                          :core:ui  (no deps on other core modules)
+        │        │         │        │           │
+        └────────┴─────────┴────────┴───────────┘   (features → :core:ui, :core:common)
+                           │                    │
+                     cart, ticket               │
+                           ▼                    │
+                    :core:database              │
+                           │                    │
+                    :core:common         :core:ui (independent)
+
+   :app → :core:network → :core:common
 ```
 
 | Module | May depend on | Must NOT depend on |
@@ -29,7 +31,7 @@ Base package: `com.innaval.ingresosnamao`.
 | `:core:database` | `:core:common` | `:core:network`, `:core:ui`, features |
 | `:feature:auth` | `:core:common`, `:core:ui`, Firebase Authentication and Firestore | other features, `:core:database` |
 | `:feature:events` | `:core:common`, `:core:ui`, Firebase Remote Config | other features, `:core:database` |
-| `:feature:payment` | `:core:common`, `:core:ui`, `:core:network` | other features, `:core:database` |
+| `:feature:payment` | `:core:common`, `:core:ui` | other features, `:core:database` |
 | `:feature:cart` | `:core:common`, `:core:ui`, `:core:database` | other features |
 | `:feature:ticket` | `:core:common`, `:core:ui`, `:core:database` | other features |
 | `:app` | everything | – |
@@ -63,13 +65,14 @@ feature/<name>/src/main/java/com/innaval/ingresosnamao/feature/<name>/
  ├─ domain/        pure Kotlin: models, Repository interfaces, UseCases   (no Android, Retrofit, Room)
  ├─ data/          RepositoryImpl, Api (Retrofit), Dto, mappers; `internal`
  ├─ presentation/  XxxViewModel, XxxUiState, XxxRoute (stateful), XxxScreen (stateless)
- └─ di/            `xxxModule` (Koin)
+ └─ di/            `xxxModule()` (Koin module factory)
 ```
 
 - Domain: `Event`, `EventRepository`, `GetEventsUseCase` (verb + noun + `UseCase`, single `operator fun invoke`).
 - Data: `EventDto`, `EventsApi`, `EventRepositoryImpl`, `EventEntity` (in `:core:database`), mapper `toDomain()`.
 - Presentation: `EventsViewModel`, `EventsUiState` (sealed/data class), `EventsRoute`/`EventsScreen`.
-- Only `di/` module val and `presentation/*Route` are public; everything in `data/` is `internal`.
+- DI module factories, domain contracts and presentation entry points are public; data implementations
+  are `internal`.
 - Money in cents (`Long`); shared infrastructure uses `AppResult`/`AppError` and injected dispatchers.
   Auth, events and cart use their own typed results and errors.
 
@@ -82,8 +85,10 @@ feature/<name>/src/main/java/com/innaval/ingresosnamao/feature/<name>/
    `Route` (koinViewModel + collectAsStateWithLifecycle) vs `Screen` (stateless) keeps previews/tests trivial.
 3. **Domain independent of frameworks.** Repository interfaces in domain, implementations in data → Dependency Inversion;
    UseCases hold business rules and are unit-testable with fakes.
-4. **Koin, one module per Gradle module.** Each exposes `xxxModule`; `:app` aggregates them (`AppModules.kt`) and supplies
-   environment config (`NetworkConfig` from `BuildConfig`), so libraries stay environment-agnostic.
+4. **Koin per feature and injectable core.** Each exposes `xxxModule()`; `:app` aggregates fresh modules
+   (`AppModules.kt`) and supplies environment config (`NetworkConfig` from `BuildConfig`). `:core:ui`
+   has no injectable services. Isolated test containers use fresh modules and explicit overrides;
+   production rejects duplicate definitions. See [`app/DEPENDENCY_INJECTION.md`](app/DEPENDENCY_INJECTION.md).
 5. **Navigation lives in `:app`.** Features expose routes with callbacks; this is what keeps features decoupled.
 6. **Network/DB as infrastructure.** `:core:network` provides Json/OkHttp/Retrofit; features declare their own `Api`
    interfaces. `:core:database` owns `AppDatabase` (Room requires one place to list entities) and DAOs; features map

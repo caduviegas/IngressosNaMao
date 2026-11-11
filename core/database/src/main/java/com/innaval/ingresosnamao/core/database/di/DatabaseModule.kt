@@ -6,6 +6,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.innaval.ingresosnamao.core.database.AppDatabase
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 
 val migration1To2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -26,11 +27,11 @@ val migration2To3 = object : Migration(2, 3) {
     }
 }
 
-val databaseModule = module {
+fun databaseModule() = module {
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, "ingressos.db")
             .addMigrations(migration1To2, migration2To3).build()
-    }
+    } onClose { it?.close() }
     single { get<AppDatabase>().ticketDao() }
     single { get<AppDatabase>().cartDao() }
     single { get<AppDatabase>().issuedTicketDao() }

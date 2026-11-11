@@ -11,7 +11,7 @@ import retrofit2.Retrofit
 /** Provided by :app (the only place that knows BuildConfig / environments). */
 data class NetworkConfig(val baseUrl: String, val debug: Boolean)
 
-val networkModule = module {
+fun networkModule() = module {
     single { Json { ignoreUnknownKeys = true; explicitNulls = false } }
     single {
         val config = get<NetworkConfig>()

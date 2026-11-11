@@ -9,7 +9,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
-val cartModule = module {
+fun cartModule() = module {
     single { CartLocalDataSource(get(), get()) }
     single<CartRepository> { RoomCartRepository(get(), get()) }
     factoryOf(::ObserveCartUseCase)

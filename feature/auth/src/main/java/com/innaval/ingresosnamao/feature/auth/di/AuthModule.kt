@@ -9,7 +9,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val authModule = module {
+fun authModule() = module {
     single { FirebaseAuthDataSource() }
     single { FirestoreProfileDataSource() }
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }

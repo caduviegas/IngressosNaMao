@@ -12,12 +12,12 @@ import com.innaval.ingresosnamao.feature.payment.di.paymentModule
 import com.innaval.ingresosnamao.feature.ticket.di.ticketModule
 import org.koin.dsl.module
 
-private val configModule = module {
+private fun configModule() = module {
     single { NetworkConfig(baseUrl = BuildConfig.API_BASE_URL, debug = BuildConfig.DEBUG) }
 }
 
-val appModules = listOf(
-    configModule,
-    commonModule, networkModule, databaseModule,
-    authModule, eventsModule, cartModule, paymentModule, ticketModule,
+fun appModules() = listOf(
+    configModule(),
+    commonModule(), networkModule(), databaseModule(),
+    authModule(), eventsModule(), cartModule(), paymentModule(), ticketModule(),
 )

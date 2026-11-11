@@ -10,7 +10,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val eventsModule = module {
+fun eventsModule() = module {
     single { EventsRemoteDataSource() }
     single { EventsJsonParser() }
     single<EventRepository> { EventRepositoryImpl(get(), get(), get()) }
