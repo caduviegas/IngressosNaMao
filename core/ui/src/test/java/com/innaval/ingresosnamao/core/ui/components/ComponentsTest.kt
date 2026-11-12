@@ -119,4 +119,22 @@ class ComponentsTest {
         IngressosButtonStyle.entries.forEach { compose.onNodeWithText(it.name).assertIsEnabled().performClick() }
         compose.runOnIdle { assertEquals(4, clicks) }
     }
+
+    @Test fun brandHeaderShowsNameAboveContentInBothThemes() {
+        var dark by mutableStateOf(false)
+        compose.setContent {
+            IngressosTheme(darkTheme = dark) {
+                androidx.compose.foundation.layout.Column {
+                    IngressosBrandHeader()
+                    androidx.compose.material3.Text("Conteúdo da tela")
+                }
+            }
+        }
+        repeat(2) {
+            val header = compose.onNodeWithText("Ingressos na Mão").fetchSemanticsNode().boundsInRoot
+            val content = compose.onNodeWithText("Conteúdo da tela").fetchSemanticsNode().boundsInRoot
+            org.junit.Assert.assertTrue(header.bottom < content.top)
+            compose.runOnIdle { dark = true }
+        }
+    }
 }

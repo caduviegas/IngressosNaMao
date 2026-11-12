@@ -3,6 +3,8 @@ package com.innaval.ingresosnamao.navigation
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -12,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,6 +38,7 @@ import com.innaval.ingresosnamao.feature.payment.domain.PaymentState
 import com.innaval.ingresosnamao.feature.payment.domain.AttemptStatus
 import com.innaval.ingresosnamao.core.ui.components.ErrorState
 import com.innaval.ingresosnamao.core.ui.components.LoadingState
+import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.BuildConfig
 import com.innaval.ingresosnamao.feature.events.presentation.EventsRoute
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentRoute
@@ -85,7 +89,7 @@ fun AppNavHost() {
             val scope = rememberCoroutineScope()
             var adding by remember { mutableStateOf(false) }
             var error by remember { mutableStateOf<String?>(null) }
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
                 TextButton(onClick = { nav.navigate(Routes.tickets(userId)) }) { Text("Meus ingressos") }
                 val attempt = (paymentState as? PaymentState.Active)?.attempt
                 if (BuildConfig.DEBUG && attempt?.status == AttemptStatus.APPROVED && attempt.order.userId == userId) {
@@ -184,7 +188,10 @@ fun AppNavHost() {
             val attempt = (paymentState as? PaymentState.Active)?.attempt
             val purchase = approvedSimulation(BuildConfig.DEBUG, userId, fingerprint, attempt)
             if (paymentState is PaymentState.StorageError) {
-                Column {
+                Column(
+                    modifier = Modifier.padding(IngressosTheme.spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+                ) {
                     Text("Falha ao salvar o estado do pagamento. Os ingressos de teste já emitidos podem ser consultados; não pague novamente.")
                     TextButton(onClick = { nav.navigate(Routes.tickets(userId)) { popUpTo(Routes.EVENTS) } }) {
                         Text("Ver ingressos")

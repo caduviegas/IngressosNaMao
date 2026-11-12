@@ -2,12 +2,15 @@ package com.innaval.ingresosnamao.feature.ticket.presentation
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -123,14 +126,20 @@ fun TicketsRoute(
     viewModel: TicketsViewModel = koinViewModel(key = "tickets:$userId", parameters = { parametersOf(userId) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+    Column(
+        Modifier.padding(IngressosTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+    ) {
         Text("Meus ingressos de teste", style = MaterialTheme.typography.headlineSmall)
         Text("Simulação — sem validade de entrada.")
         when (val current = state) {
             TicketUiState.Loading -> Text("Carregando compras…")
             TicketUiState.Empty -> Text("Nenhuma compra de teste encontrada.")
             TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar as compras.", viewModel::retry)
-            is TicketUiState.Content -> LazyColumn(Modifier.weight(1f, fill = false)) {
+            is TicketUiState.Content -> LazyColumn(
+                Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+            ) {
                 items(current.value, key = { it.reference }) { purchase ->
                     TextButton(onClick = { onReceipt(purchase.reference) }) {
                         Text("Pedido ${purchase.orderId} — ${formatPriceBrl(purchase.totalCents)}")
@@ -151,7 +160,10 @@ fun ReceiptRoute(
     viewModel: ReceiptViewModel = koinViewModel(key = "receipt:$userId:$reference", parameters = { parametersOf(userId, reference) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+    Column(
+        Modifier.padding(IngressosTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+    ) {
         Text("Comprovante de teste", style = MaterialTheme.typography.headlineSmall)
         Text("Simulação — não comprova pagamento real.")
         when (val current = state) {
@@ -163,12 +175,17 @@ fun ReceiptRoute(
                 val quantities = receipt.tickets.groupingBy {
                     Triple(it.eventId, it.eventName, it.unitPriceCents)
                 }.eachCount().toList()
-                LazyColumn(Modifier.weight(1f, fill = false)) {
+                LazyColumn(
+                    Modifier.weight(1f, fill = false),
+                    verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+                ) {
                     item {
-                        Text("Pedido: ${receipt.purchase.orderId}")
-                        Text("Total: ${formatPriceBrl(receipt.purchase.totalCents)}")
-                        Text("Emitido: ${DateFormat.getDateTimeInstance().format(Date(receipt.purchase.issuedAtMillis))}")
-                        Text("Ingressos: ${receipt.tickets.size}")
+                        Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
+                            Text("Pedido: ${receipt.purchase.orderId}")
+                            Text("Total: ${formatPriceBrl(receipt.purchase.totalCents)}")
+                            Text("Emitido: ${DateFormat.getDateTimeInstance().format(Date(receipt.purchase.issuedAtMillis))}")
+                            Text("Ingressos: ${receipt.tickets.size}")
+                        }
                     }
                     items(quantities) { (item, quantity) ->
                         Text("${item.second}: $quantity × ${formatPriceBrl(item.third)}")
@@ -194,7 +211,10 @@ fun TicketDetailRoute(
     viewModel: TicketDetailViewModel = koinViewModel(key = "ticket:$userId:$id", parameters = { parametersOf(userId, id) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+    Column(
+        Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+    ) {
         Text("Detalhes do ingresso", style = MaterialTheme.typography.headlineSmall)
         Text("Simulação — sem validade de entrada.")
         when (val current = state) {
@@ -225,6 +245,8 @@ fun TicketDetailRoute(
 
 @Composable
 private fun TicketErrorMessage(message: String, onRetry: () -> Unit) {
-    Text(message, color = MaterialTheme.colorScheme.error)
-    TextButton(onClick = onRetry) { Text("Tentar novamente") }
+    Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+        Text(message, color = MaterialTheme.colorScheme.error)
+        TextButton(onClick = onRetry) { Text("Tentar novamente") }
+    }
 }

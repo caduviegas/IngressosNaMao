@@ -42,7 +42,7 @@ fun EventsRoute(
     viewModel: EventsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
         IngressosTopBar(title = "Eventos", actions = {
             TextButton(onClick = onCartClick, enabled = !adding) { Text("Ver carrinho") }
         })
@@ -98,7 +98,10 @@ fun EventsScreen(
                                 is AsyncImagePainter.State.Success -> SubcomposeAsyncImageContent()
                             }
                         }
-                        Column(Modifier.padding(IngressosTheme.spacing.md)) {
+                        Column(
+                            Modifier.padding(IngressosTheme.spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs),
+                        ) {
                             Text(event.name, style = MaterialTheme.typography.titleMedium)
                             Text(event.price, style = MaterialTheme.typography.bodyMedium)
                         }
@@ -111,7 +114,10 @@ fun EventsScreen(
 
 @Composable
 private fun StaleNotice(onRetry: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(IngressosTheme.spacing.md)) {
+    Column(
+        Modifier.fillMaxWidth().padding(IngressosTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+    ) {
         Text("Não foi possível atualizar. Os eventos exibidos podem estar desatualizados.")
         TextButton(onClick = onRetry) { Text("Atualizar") }
     }

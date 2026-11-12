@@ -1,7 +1,10 @@
 package com.innaval.ingresosnamao.feature.payment.presentation
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,7 +63,10 @@ fun PaymentRoute(
     val error by viewModel.error.collectAsStateWithLifecycle()
     var clientId by remember { mutableStateOf("") }
     var accessToken by remember { mutableStateOf("") }
-    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+    Column(
+        Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.md),
+    ) {
         Text("Pagamento de teste", style = MaterialTheme.typography.headlineSmall)
         Text("Total: ${formatPriceBrl(order.totalCents)}")
         Text("Simulação no emulador Cielo. Não utilize credenciais de produção.")

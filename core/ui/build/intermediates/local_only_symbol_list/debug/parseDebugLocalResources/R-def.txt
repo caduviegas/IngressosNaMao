@@ -1,4 +1,6 @@
 R_DEF: Internal format may change without notice
 local
+drawable ingressos_logo
+string ingressos_brand_name
 string ingressos_loading
 string ingressos_retry

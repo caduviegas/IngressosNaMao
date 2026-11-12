@@ -55,7 +55,10 @@ fun CartCleanupRoute(
         CartCleanupState.Loading, CartCleanupState.Complete -> LoadingState()
         is CartCleanupState.Error -> {
             if (current.error == CartError.CART_CHANGED) {
-                Column(Modifier.padding(IngressosTheme.spacing.md)) {
+                Column(
+                    Modifier.padding(IngressosTheme.spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+                ) {
                     Text("Pagamento confirmado. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
                     IngressosButton("Continuar", onComplete)
                 }
@@ -84,17 +87,22 @@ fun CartScreen(
             verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
         ) {
             item {
-                Text("Carrinho", style = MaterialTheme.typography.headlineSmall)
-                if (cart.items.isEmpty()) Text("Seu carrinho está vazio.")
-                state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
+                Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+                    Text("Carrinho", style = MaterialTheme.typography.headlineSmall)
+                    if (cart.items.isEmpty()) Text("Seu carrinho está vazio.")
+                    state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
+                }
             }
             items(cart.items, key = { it.eventId }) { item ->
                 IngressosCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(IngressosTheme.spacing.md)) {
+                    Column(
+                        Modifier.padding(IngressosTheme.spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs),
+                    ) {
                         Text(item.eventName, style = MaterialTheme.typography.titleMedium)
                         Text("Unitário: ${formatPriceBrl(item.unitPriceCents)}")
                         Text("Subtotal: ${formatPriceBrl(item.unitPriceCents * item.quantity)}")
-                        Row {
+                        Row(horizontalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
                             TextButton(
                                 onClick = { onQuantity(item, -1) },
                                 enabled = !state.busy && item.quantity > 1,
@@ -112,9 +120,11 @@ fun CartScreen(
                 }
             }
             item {
-                Text("Total: ${formatPriceBrl(cart.totalCents)}", style = MaterialTheme.typography.titleMedium)
-                IngressosButton("Finalizar compra", onCheckout, enabled = cart.items.isNotEmpty() && !state.busy)
-                TextButton(onClick = onBack, enabled = !state.busy) { Text("Continuar comprando") }
+                Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+                    Text("Total: ${formatPriceBrl(cart.totalCents)}", style = MaterialTheme.typography.titleMedium)
+                    IngressosButton("Finalizar compra", onCheckout, enabled = cart.items.isNotEmpty() && !state.busy)
+                    TextButton(onClick = onBack, enabled = !state.busy) { Text("Continuar comprando") }
+                }
             }
         }
     }
