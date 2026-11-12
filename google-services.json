@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "287874191390",
+    "project_id": "ingressosnamao-73e37",
+    "storage_bucket": "ingressosnamao-73e37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287874191390:android:6dd8d5c219303c2d2f1e0f",
+        "android_client_info": {
+          "package_name": "com.innaval.ingresosnamao"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBONUE18KgXZF8GzxyV3KQINNIgovhpe1Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
