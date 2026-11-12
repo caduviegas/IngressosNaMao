@@ -20,12 +20,18 @@ import com.innaval.ingresosnamao.feature.events.domain.GetEventsUseCase
 import com.innaval.ingresosnamao.feature.events.presentation.EventsViewModel
 import com.innaval.ingresosnamao.feature.payment.domain.*
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentViewModel
+import com.innaval.ingresosnamao.feature.profile.domain.ProfileCartCleaner
+import com.innaval.ingresosnamao.feature.profile.domain.ProfileRepository
+import com.innaval.ingresosnamao.feature.profile.domain.LogoutUseCase
+import com.innaval.ingresosnamao.feature.profile.domain.ProfileIdentity
+import com.innaval.ingresosnamao.feature.profile.domain.ProfileResult
 import com.innaval.ingresosnamao.feature.ticket.domain.*
 import com.innaval.ingresosnamao.feature.ticket.presentation.ReceiptViewModel
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketDetailViewModel
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketsViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -36,6 +42,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.*
@@ -106,6 +113,8 @@ class AppModulesTest {
             assertSame(koin.get<CartRepository>(), koin.get<CartRepository>())
             assertSame(koin.get<PaymentGateway>(), koin.get<PaymentGateway>())
             assertSame(koin.get<PaymentRepository>(), koin.get<PaymentRepository>())
+            assertSame(koin.get<ProfileRepository>(), koin.get<ProfileRepository>())
+            assertSame(koin.get<ProfileCartCleaner>(), koin.get<ProfileCartCleaner>())
             assertSame(koin.get<TicketRepository>(), koin.get<TicketRepository>())
             assertSame(koin.get<QrCodeGenerator>(), koin.get<QrCodeGenerator>())
             assertNotSame(koin.get<GetEventsUseCase>(), koin.get<GetEventsUseCase>())
@@ -123,6 +132,8 @@ class AppModulesTest {
             koin.get<SetCartQuantityUseCase>()
             koin.get<RemoveFromCartUseCase>()
             koin.get<ClearCartUseCase>()
+            koin.get<ClearCartForLogoutUseCase>()
+            koin.get<LogoutUseCase>()
             koin.get<StartPaymentUseCase>()
             koin.get<IssueTicketsUseCase>()
             koin.get<ObservePurchasesUseCase>()
@@ -214,6 +225,26 @@ class AppModulesTest {
         } finally {
             context.close()
             separate.close()
+        }
+    }
+
+    @Test
+    fun authRecoveryLogoutUsesSharedCartCleanup() = runTest {
+        val cart = mockk<CartRepository>()
+        val profile = mockk<ProfileRepository>()
+        coEvery { profile.currentUser() } returns ProfileResult.Success(ProfileIdentity("alice", null, null))
+        coEvery { cart.clearForLogout("alice") } returns CartResult.Success(Unit)
+        coEvery { profile.signOut("alice") } returns ProfileResult.Success(Unit)
+        val overrides = module {
+            single<CartRepository> { cart }
+            single<ProfileRepository> { profile }
+        }
+        val context = testKoin(application, overrides)
+        try {
+            assertEquals(AuthResult.Success(Unit), context.koin.get<SignOutUseCase>()("alice"))
+            coVerifyOrder { cart.clearForLogout("alice"); profile.signOut("alice") }
+        } finally {
+            context.close()
         }
     }
 }

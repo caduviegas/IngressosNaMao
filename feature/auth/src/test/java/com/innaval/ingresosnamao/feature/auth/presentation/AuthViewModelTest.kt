@@ -3,7 +3,6 @@ package com.innaval.ingresosnamao.feature.auth.presentation
 import com.innaval.ingresosnamao.feature.auth.domain.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -26,13 +25,13 @@ import org.junit.Test
 class AuthViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<AuthRepository>()
+    private val logout = mockk<AuthSessionLogout>()
     private val user = AuthUser("uid", "user@example.com", "Pessoa")
     private val profile = UserProfile("Pessoa", "user@example.com", "Rua 1")
 
     @Before fun setup() {
         Dispatchers.setMain(dispatcher)
         coEvery { repository.currentUser() } returns AuthResult.Success(null)
-        every { repository.signOut() } returns Unit
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -40,7 +39,7 @@ class AuthViewModelTest {
     private fun viewModel() = AuthViewModel(
         LoginUseCase(repository), GoogleLoginUseCase(repository), RegisterUseCase(repository),
         GetCurrentUserUseCase(repository), GetProfileUseCase(repository), SaveProfileUseCase(repository),
-        SignOutUseCase(repository),
+        SignOutUseCase(logout),
     )
 
     @Test fun invalidInputsDoNotCallRepository() = runTest(dispatcher) {
@@ -104,6 +103,25 @@ class AuthViewModelTest {
         vm.retryProfile()
         advanceUntilIdle()
         assertEquals(AuthStage.AUTHENTICATED, vm.state.value.stage)
+    }
+
+    @Test fun leavingIncompleteProfileReportsLogoutFailureAndCanRetry() = runTest(dispatcher) {
+        coEvery { repository.currentUser() } returns AuthResult.Success(user)
+        coEvery { repository.getProfile(user) } returns AuthResult.Failure(AuthError.PROFILE_READ)
+        coEvery { logout.signOut(user.id) } returnsMany listOf(
+            AuthResult.Failure(AuthError.LOGOUT_CART), AuthResult.Success(Unit)
+        )
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.leaveAccount()
+        advanceUntilIdle()
+        assertEquals(AuthError.LOGOUT_CART, vm.state.value.error)
+        assertEquals(AuthStage.CHECK_PROFILE, vm.state.value.stage)
+        vm.leaveAccount()
+        advanceUntilIdle()
+        assertEquals(AuthStage.LOGIN, vm.state.value.stage)
+        assertEquals(null, vm.state.value.user)
+        coVerify(exactly = 2) { logout.signOut(user.id) }
     }
 
     @Test fun registrationProfileFailureCanBeRetriedWithoutRecreatingAccount() = runTest(dispatcher) {

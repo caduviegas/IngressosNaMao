@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -42,6 +43,7 @@ import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.BuildConfig
 import com.innaval.ingresosnamao.feature.events.presentation.EventsRoute
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentRoute
+import com.innaval.ingresosnamao.feature.profile.presentation.ProfileRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketsRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.ReceiptRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketDetailRoute
@@ -55,6 +57,7 @@ import org.koin.compose.koinInject
 
 private object Routes {
     const val LOGIN = "login"
+    const val PROFILE = "profile"
     const val EVENTS = "events/{userId}"
     const val CART = "cart/{userId}"
     const val PAYMENT = "payment/{userId}/{amount}/{fingerprint}"
@@ -73,8 +76,7 @@ private object Routes {
 
 /** Features never navigate to each other; every cross-feature transition is wired here. */
 @Composable
-fun AppNavHost() {
-    val nav = rememberNavController()
+fun AppNavHost(nav: NavHostController = rememberNavController()) {
     NavHost(nav, startDestination = Routes.LOGIN) {
         composable(Routes.LOGIN) {
             LoginRoute(onLoggedIn = { userId ->
@@ -90,6 +92,7 @@ fun AppNavHost() {
             var adding by remember { mutableStateOf(false) }
             var error by remember { mutableStateOf<String?>(null) }
             Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+                TextButton(onClick = { nav.navigate(Routes.PROFILE) }, enabled = !adding) { Text("Meu perfil") }
                 TextButton(onClick = { nav.navigate(Routes.tickets(userId)) }) { Text("Meus ingressos") }
                 val attempt = (paymentState as? PaymentState.Active)?.attempt
                 if (BuildConfig.DEBUG && attempt?.status == AttemptStatus.APPROVED && attempt.order.userId == userId) {
@@ -121,6 +124,17 @@ fun AppNavHost() {
                     },
                 )
             }
+        }
+        composable(Routes.PROFILE) {
+            ProfileRoute(
+                onLoggedOut = {
+                    nav.navigate(Routes.LOGIN) {
+                        popUpTo(nav.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Routes.CART, arguments = listOf(navArgument("userId") { type = NavType.StringType })) { entry ->
             val userId = requireNotNull(entry.arguments?.getString("userId"))

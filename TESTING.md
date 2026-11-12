@@ -32,6 +32,7 @@ memória e os contêineres Koin são isolados e encerrados.
 | Cart | vazio, itens e total, quantidade e remoção, persistência offline, falha de armazenamento e carrinho alterado após pagamento |
 | Payment | pronto, aguardando, aprovado, cancelado/erro, desconhecido/timeout, erro de armazenamento e bloqueio de cobrança duplicada |
 | Ticket | emissão somente para compra válida, idempotência, isolamento por usuário, carregando/vazio/erro, comprovante e QR local |
+| Profile | dados ausentes, cache, confirmação, falha e ordem do logout, isolamento do carrinho e remoção da pilha autenticada |
 
 ## Cobertura e critérios de aceite
 

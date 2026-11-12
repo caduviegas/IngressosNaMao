@@ -6,7 +6,8 @@ data class Registration(val name: String, val email: String, val address: String
 
 enum class AuthError {
     INVALID_CREDENTIALS, EMAIL_IN_USE, WEAK_PASSWORD, USER_DISABLED, TOO_MANY_REQUESTS,
-    NETWORK, GOOGLE_CANCELLED, GOOGLE_FAILED, CONFIGURATION, PROFILE_READ, PROFILE_WRITE, UNKNOWN
+    NETWORK, GOOGLE_CANCELLED, GOOGLE_FAILED, CONFIGURATION, PROFILE_READ, PROFILE_WRITE,
+    LOGOUT_CART, LOGOUT_SESSION_CHANGED, LOGOUT_SESSION_CHANGED_AFTER_CLEAR, LOGOUT_AFTER_CLEAR, UNKNOWN
 }
 
 sealed interface AuthResult<out T> {
@@ -21,7 +22,6 @@ interface AuthRepository {
     suspend fun register(email: String, password: String): AuthResult<AuthUser>
     suspend fun getProfile(user: AuthUser): AuthResult<UserProfile?>
     suspend fun saveProfile(user: AuthUser, profile: UserProfile): AuthResult<Unit>
-    fun signOut()
 }
 
 enum class Field { NAME, EMAIL, ADDRESS, PASSWORD }
@@ -74,6 +74,10 @@ class SaveProfileUseCase(private val repository: AuthRepository) {
     )
 }
 
-class SignOutUseCase(private val repository: AuthRepository) {
-    operator fun invoke() = repository.signOut()
+fun interface AuthSessionLogout {
+    suspend fun signOut(userId: String): AuthResult<Unit>
+}
+
+class SignOutUseCase(private val logout: AuthSessionLogout) {
+    suspend operator fun invoke(userId: String) = logout.signOut(userId)
 }

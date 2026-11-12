@@ -138,8 +138,13 @@ class AuthViewModel(
 
     fun leaveAccount() {
         if (state.value.loading) return
-        signOut()
-        mutableState.value = AuthUiState(loading = false)
+        val user = state.value.user ?: return
+        start {
+            when (val result = signOut(user.id)) {
+                is AuthResult.Success -> mutableState.value = AuthUiState(loading = false)
+                is AuthResult.Failure -> fail(result.error)
+            }
+        }
     }
 
     private fun start(block: suspend () -> Unit) {

@@ -31,7 +31,6 @@ internal class FirebaseAuthDataSource {
         requireNotNull(auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await().user).toDomain()
     suspend fun register(email: String, password: String): AuthUser =
         requireNotNull(auth.createUserWithEmailAndPassword(email, password).await().user).toDomain()
-    fun signOut() = auth.signOut()
 
     private fun FirebaseUser.toDomain() = AuthUser(uid, requireNotNull(email), displayName.orEmpty())
 }
@@ -106,7 +105,6 @@ internal class AuthRepositoryImpl(
         profileCall(AuthError.PROFILE_READ) { profiles.get(user) }
     override suspend fun saveProfile(user: AuthUser, profile: UserProfile): AuthResult<Unit> =
         profileCall(AuthError.PROFILE_WRITE) { profiles.save(user, profile) }
-    override fun signOut() = auth.signOut()
 
     private suspend fun <T> authCall(block: suspend () -> T): AuthResult<T> = try {
         AuthResult.Success(block())

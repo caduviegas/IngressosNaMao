@@ -7,12 +7,12 @@ Base package: `com.innaval.ingresosnamao`.
 
 ```
                        :app  (composition root: DI, navigation, config)
-          ┌──────┬───────┼────────┬─────────┐
-          ▼      ▼       ▼        ▼         ▼
-     :feature: :feature: :feature: :feature: :feature:
-       auth     events    cart    payment    ticket
-        │        │         │        │           │
-        └────────┴─────────┴────────┴───────────┘   (features → :core:ui, :core:common)
+          ┌──────┬───────┼────────┬─────────┬────────┐
+          ▼      ▼       ▼        ▼         ▼        ▼
+     :feature: :feature: :feature: :feature: :feature: :feature:
+       auth     events    cart    payment    ticket    profile
+        │        │         │        │           │       │
+        └────────┴─────────┴────────┴───────────┴───────┘   (features → :core:ui; common where needed)
                            │                    │
                      cart, ticket               │
                            ▼                    │
@@ -34,6 +34,7 @@ Base package: `com.innaval.ingresosnamao`.
 | `:feature:payment` | `:core:common`, `:core:ui` | other features, `:core:database` |
 | `:feature:cart` | `:core:common`, `:core:ui`, `:core:database` | other features |
 | `:feature:ticket` | `:core:common`, `:core:ui`, `:core:database` | other features |
+| `:feature:profile` | `:core:ui`, Firebase Authentication and Firestore | other features, `:core:database` |
 | `:app` | everything | – |
 
 Rules: features never depend on features; dependencies point downward only; the graph is a DAG by construction.
@@ -122,3 +123,5 @@ The events Remote Config contract, cache behavior and test strategy are document
 [`feature/events/EVENTS.md`](feature/events/EVENTS.md).
 The cart's persistence, account isolation and checkout behavior are documented in
 [`feature/cart/CART.md`](feature/cart/CART.md).
+The profile and logout contract is documented in [`feature/profile/PROFILE.md`](feature/profile/PROFILE.md);
+`:app` binds its cart-cleaning port to the cart feature.
