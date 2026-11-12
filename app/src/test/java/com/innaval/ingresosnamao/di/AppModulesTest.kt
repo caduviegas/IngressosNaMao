@@ -83,7 +83,7 @@ class AppModulesTest {
     }
 
     @Test
-    fun productionCompositionRejectsDuplicateDefinitions() {
+    fun givenProductionModulesWhenComposedThenRejectsDuplicateDefinitions() {
         val context = koinApplication {
             androidContext(application)
             allowOverride(false)
@@ -98,7 +98,7 @@ class AppModulesTest {
     }
 
     @Test
-    fun realGraphResolvesAllPublicEntriesAndPreservesLifetimes() {
+    fun givenProductionGraphWhenResolvedThenProvidesEntriesAndPreservesLifetimes() {
         val context = testKoin(application, inMemoryDatabase())
         try {
             val koin = context.koin
@@ -154,7 +154,7 @@ class AppModulesTest {
     }
 
     @Test
-    fun independentCompositionsDoNotShareOrCloseEachOthersSingletons() {
+    fun givenIndependentGraphsWhenClosedThenDoNotShareOrCloseOtherSingletons() {
         val first = testKoin(application, inMemoryDatabase())
         val second = testKoin(application, inMemoryDatabase())
         var firstClosed = false
@@ -176,7 +176,7 @@ class AppModulesTest {
     }
 
     @Test
-    fun overridesReachUseCasesAndParameterizedViewModels() {
+    fun givenOverridesWhenResolvingGraphThenReachesUseCasesAndViewModels() {
         val cart = mockk<CartRepository>()
         val tickets = mockk<TicketRepository>()
         val gateway = mockk<PaymentGateway>()
@@ -229,7 +229,7 @@ class AppModulesTest {
     }
 
     @Test
-    fun authRecoveryLogoutUsesSharedCartCleanup() = runTest {
+    fun givenAuthRecoveryWhenLoggingOutThenUsesSharedCartCleanup() = runTest {
         val cart = mockk<CartRepository>()
         val profile = mockk<ProfileRepository>()
         coEvery { profile.currentUser() } returns ProfileResult.Success(ProfileIdentity("alice", null, null))

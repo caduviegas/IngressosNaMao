@@ -16,7 +16,7 @@ import org.junit.Test
 class QrCodeTest {
     private val dispatchers = mockk<DispatcherProvider> { every { default } returns Dispatchers.Default }
 
-    @Test fun generatedQrDecodesToTicketIdOnly() = runBlocking {
+    @Test fun givenTicketIdWhenGeneratingQrThenEncodesOnlyId() = runBlocking {
         val id = "550e8400-e29b-41d4-a716-446655440000"
         val pattern = (ZxingQrCodeGenerator(dispatchers).generate(id) as QrResult.Success).pattern
         val source = RGBLuminanceSource(pattern.size, pattern.size, pattern.pixels)
@@ -24,7 +24,7 @@ class QrCodeTest {
         assertEquals(id, decoded.text)
     }
 
-    @Test fun blankIdFails() = runBlocking {
+    @Test fun givenBlankTicketIdWhenGeneratingQrThenReturnsFailure() = runBlocking {
         assertEquals(QrResult.Failure, ZxingQrCodeGenerator(dispatchers).generate(""))
     }
 }

@@ -2,4 +2,5 @@
     <string name="ingressos_brand_name">Ingressos na Mão</string>
     <string name="ingressos_loading">Carregando</string>
     <string name="ingressos_retry">Tentar novamente</string>
+    <string name="ingressos_back">Voltar</string>
 </resources>

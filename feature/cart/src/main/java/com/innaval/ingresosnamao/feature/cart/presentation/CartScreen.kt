@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.innaval.ingresosnamao.core.ui.components.ErrorState
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosBackScreen
 import com.innaval.ingresosnamao.core.ui.components.IngressosCard
 import com.innaval.ingresosnamao.core.ui.components.LoadingState
 import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
@@ -59,11 +60,14 @@ fun CartCleanupRoute(
                     Modifier.padding(IngressosTheme.spacing.md),
                     verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
                 ) {
-                    Text("Pagamento confirmado. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
+                    Text("Retorno recebido. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
                     IngressosButton("Continuar", onComplete)
                 }
             } else {
-                ErrorState("Pagamento confirmado, mas não foi possível limpar o carrinho. Tente novamente.", viewModel::retry)
+                ErrorState(
+                    "Retorno recebido, mas não foi possível limpar o carrinho. Tente novamente.",
+                    viewModel::retry,
+                )
             }
         }
     }
@@ -79,51 +83,57 @@ fun CartScreen(
     onRetry: () -> Unit,
 ) {
     val cart = state.cart
-    when {
-        state.loading -> LoadingState()
-        cart == null -> ErrorState(cartErrorMessage(state.error ?: CartError.STORAGE), onRetry)
-        else -> LazyColumn(
-            contentPadding = PaddingValues(IngressosTheme.spacing.md),
-            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-        ) {
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
-                    Text("Carrinho", style = MaterialTheme.typography.headlineSmall)
-                    if (cart.items.isEmpty()) Text("Seu carrinho está vazio.")
-                    state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
+    IngressosBackScreen("Carrinho", onBack, backEnabled = !state.busy) {
+        when {
+            state.loading -> LoadingState()
+            cart == null -> ErrorState(cartErrorMessage(state.error ?: CartError.STORAGE), onRetry)
+            else -> LazyColumn(
+                contentPadding = PaddingValues(IngressosTheme.spacing.md),
+                verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+            ) {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+                        if (cart.items.isEmpty()) Text("Seu carrinho está vazio.")
+                        state.error?.let { Text(cartErrorMessage(it), color = MaterialTheme.colorScheme.error) }
+                    }
                 }
-            }
-            items(cart.items, key = { it.eventId }) { item ->
-                IngressosCard(Modifier.fillMaxWidth()) {
-                    Column(
-                        Modifier.padding(IngressosTheme.spacing.md),
-                        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs),
-                    ) {
-                        Text(item.eventName, style = MaterialTheme.typography.titleMedium)
-                        Text("Unitário: ${formatPriceBrl(item.unitPriceCents)}")
-                        Text("Subtotal: ${formatPriceBrl(item.unitPriceCents * item.quantity)}")
-                        Row(horizontalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
-                            TextButton(
-                                onClick = { onQuantity(item, -1) },
-                                enabled = !state.busy && item.quantity > 1,
-                                modifier = Modifier.semantics { contentDescription = "Diminuir quantidade de ${item.eventName}" },
-                            ) { Text("−") }
-                            Text("${item.quantity}", modifier = Modifier.padding(IngressosTheme.spacing.md))
-                            TextButton(
-                                onClick = { onQuantity(item, 1) },
-                                enabled = !state.busy && item.quantity < Int.MAX_VALUE,
-                                modifier = Modifier.semantics { contentDescription = "Aumentar quantidade de ${item.eventName}" },
-                            ) { Text("+") }
-                            TextButton(onClick = { onRemove(item) }, enabled = !state.busy) { Text("Remover") }
+                items(cart.items, key = { it.eventId }) { item ->
+                    IngressosCard(Modifier.fillMaxWidth()) {
+                        Column(
+                            Modifier.padding(IngressosTheme.spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs),
+                        ) {
+                            Text(item.eventName, style = MaterialTheme.typography.titleMedium)
+                            Text("Unitário: ${formatPriceBrl(item.unitPriceCents)}")
+                            Text("Subtotal: ${formatPriceBrl(item.unitPriceCents * item.quantity)}")
+                            Row(horizontalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
+                                TextButton(
+                                    onClick = { onQuantity(item, -1) },
+                                    enabled = !state.busy && item.quantity > 1,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Diminuir quantidade de ${item.eventName}"
+                                    },
+                                ) { Text("−") }
+                                Text("${item.quantity}", modifier = Modifier.padding(IngressosTheme.spacing.md))
+                                TextButton(
+                                    onClick = { onQuantity(item, 1) },
+                                    enabled = !state.busy && item.quantity < Int.MAX_VALUE,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Aumentar quantidade de ${item.eventName}"
+                                    },
+                                ) { Text("+") }
+                                TextButton(onClick = { onRemove(item) }, enabled = !state.busy) { Text("Remover") }
+                            }
                         }
                     }
                 }
-            }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
-                    Text("Total: ${formatPriceBrl(cart.totalCents)}", style = MaterialTheme.typography.titleMedium)
-                    IngressosButton("Finalizar compra", onCheckout, enabled = cart.items.isNotEmpty() && !state.busy)
-                    TextButton(onClick = onBack, enabled = !state.busy) { Text("Continuar comprando") }
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
+                        Text("Total: ${formatPriceBrl(cart.totalCents)}", style = MaterialTheme.typography.titleMedium)
+                        IngressosButton(
+                            "Finalizar compra", onCheckout, enabled = cart.items.isNotEmpty() && !state.busy,
+                        )
+                    }
                 }
             }
         }

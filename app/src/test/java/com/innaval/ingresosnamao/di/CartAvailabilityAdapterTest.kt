@@ -20,7 +20,7 @@ class CartAvailabilityAdapterTest {
     private val adapter = CartAvailabilityAdapter(GetEventsUseCase(repository))
     private val events = listOf(Event("1", "https://example.com/image", "Show", 4990, 120))
 
-    @Test fun onlySuccessfulFreshCatalogIsAccepted() = runTest {
+    @Test fun givenCatalogResultsWhenCheckingAvailabilityThenAcceptsOnlyFreshSuccess() = runTest {
         coEvery { repository.getFreshEvents() } returnsMany listOf(
             EventsResult.Success(EventList(events, false)),
             EventsResult.Success(EventList(events, true)),

@@ -1,0 +1,3 @@
+# Copie para cielo.local.properties na raiz e informe credenciais da Cielo para testes.
+CIELO_CLIENT_ID=
+CIELO_ACCESS_TOKEN=

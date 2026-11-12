@@ -75,7 +75,7 @@ erro e no aviso de cache. Falha de imagem afeta apenas a imagem do cartão.
 - Evitar buscas simultâneas pela mesma ViewModel. Cancelamentos de coroutine
   são propagados, não transformados em erro de rede.
 - Cartões esgotados não podem ser selecionados. O clique envia os dados ao `:app`, que adiciona o evento ao carrinho antes
-  de navegar. A lista também oferece acesso ao carrinho sem adicionar item.
+  de navegar. A barra inferior também permite acessar o carrinho sem adicionar item.
 
 ## 7. Critérios de aceite
 

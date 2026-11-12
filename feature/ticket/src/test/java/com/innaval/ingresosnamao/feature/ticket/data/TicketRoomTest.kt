@@ -53,7 +53,7 @@ class TicketRoomTest {
         return db to TicketRepositoryImpl(db, db.issuedTicketDao(), dispatchers)
     }
 
-    @Test fun concurrentAndRepeatedIssuanceAreIdempotentAndIsolated() = runBlocking {
+    @Test fun givenConcurrentAndRepeatedIssuanceWhenSavedThenIsIdempotentAndIsolated() = runBlocking {
         val (db, repo) = open()
         val results = coroutineScope { List(8) { async { repo.issue(purchase) } }.awaitAll() }
         assertTrue(results.all { it is TicketResult.Success })
@@ -74,7 +74,7 @@ class TicketRoomTest {
         assertEquals(receipt.tickets.map { it.id }.toSet(), restored.value.tickets.map { it.id }.toSet())
     }
 
-    @Test fun insertionFailureRollsBackPurchaseAndAllowsRetry() = runBlocking {
+    @Test fun givenInsertionFailureWhenIssuingThenRollsBackAndAllowsRetry() = runBlocking {
         val (db, repo) = open()
         db.openHelper.writableDatabase.execSQL(
             "CREATE TRIGGER reject_ticket BEFORE INSERT ON issued_tickets BEGIN SELECT RAISE(ABORT, 'test'); END"
@@ -85,7 +85,7 @@ class TicketRoomTest {
         assertTrue(repo.issue(purchase) is TicketResult.Success)
     }
 
-    @Test fun migrationPreservesLegacyTicketsAndCartWithoutExposingLegacy() = runBlocking {
+    @Test fun givenLegacyTicketsAndCartWhenMigratingThenPreservesAndIsolatesData() = runBlocking {
         context.openOrCreateDatabase(databaseName, Context.MODE_PRIVATE, null).use { db ->
             db.execSQL("CREATE TABLE tickets (id TEXT NOT NULL PRIMARY KEY, eventId TEXT NOT NULL, eventName TEXT NOT NULL, qrCode TEXT NOT NULL)")
             db.execSQL("INSERT INTO tickets VALUES ('old', 'event', 'Show', 'qr')")

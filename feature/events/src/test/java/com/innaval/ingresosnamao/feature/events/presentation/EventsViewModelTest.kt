@@ -35,7 +35,7 @@ class EventsViewModelTest {
 
     private fun viewModel() = EventsViewModel(GetEventsUseCase(repository))
 
-    @Test fun mapsSuccessToUiAndFormatsBrl() = runTest(dispatcher) {
+    @Test fun givenEventsWhenLoadedThenMapsAndFormatsPrices() = runTest(dispatcher) {
         coEvery { repository.getEvents() } returns EventsResult.Success(EventList(listOf(event), false))
         val vm = viewModel()
         assertEquals(EventsUiState.Loading, vm.state.value)
@@ -51,14 +51,14 @@ class EventsViewModelTest {
         assertEquals("R$ 92.233.720.368.547.758,07", formatPriceBrl(Long.MAX_VALUE))
     }
 
-    @Test fun emptyCacheRemainsEmptyAndMarkedStale() = runTest(dispatcher) {
+    @Test fun givenEmptyCacheWhenLoadedThenShowsStaleEmptyState() = runTest(dispatcher) {
         coEvery { repository.getEvents() } returns EventsResult.Success(EventList(emptyList(), true))
         val vm = viewModel()
         advanceUntilIdle()
         assertEquals(EventsUiState.Empty(true), vm.state.value)
     }
 
-    @Test fun failedRequestCanBeRetried() = runTest(dispatcher) {
+    @Test fun givenFailedRequestWhenRetriedThenLoadsEvents() = runTest(dispatcher) {
         coEvery { repository.getEvents() } returnsMany listOf(
             EventsResult.Failure(EventsError.INVALID_DATA),
             EventsResult.Success(EventList(listOf(event), true))
@@ -77,7 +77,7 @@ class EventsViewModelTest {
         coVerify(exactly = 2) { repository.getEvents() }
     }
 
-    @Test fun duplicateLoadDoesNotStartConcurrentRequest() = runTest(dispatcher) {
+    @Test fun givenLoadingRequestWhenLoadedAgainThenAvoidsDuplicate() = runTest(dispatcher) {
         val pending = CompletableDeferred<EventsResult>()
         coEvery { repository.getEvents() } coAnswers { pending.await() }
         val vm = viewModel()

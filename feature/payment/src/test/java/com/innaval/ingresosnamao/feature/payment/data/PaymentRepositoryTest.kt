@@ -35,7 +35,7 @@ class PaymentRepositoryTest {
         every { gateway.launch(any(), any()) } returns StartResult.Started
     }
 
-    @Test fun persistsBeforeLaunchAndBlocksAcrossRestartAndUsers() {
+    @Test fun givenNewPaymentWhenStartedThenPersistsAndBlocksOtherAttempts() {
         val repo = PaymentRepositoryImpl(context, gateway)
         every { gateway.launch(any(), any()) } answers {
             assertNotNull(context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).getString("attempt", null))
@@ -48,7 +48,17 @@ class PaymentRepositoryTest {
         assertFalse(context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).all.toString().contains("test-token"))
     }
 
-    @Test fun onlyMatchingCompletePaymentApproves() {
+    @Test fun givenMissingCredentialsWhenStartingPaymentThenReturnsError() {
+        val repo = PaymentRepositoryImpl(context, gateway)
+        assertEquals(
+            StartResult.Failure("Credenciais da Cielo não configuradas."),
+            repo.start(order, TestCredentials("", "")),
+        )
+        assertEquals(PaymentState.Ready, repo.state.value)
+        verify(exactly = 0) { gateway.launch(any(), any()) }
+    }
+
+    @Test fun givenPaymentCallbackWhenCompleteAndMatchingThenApproves() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         val reference = (repo.state.value as PaymentState.Active).attempt.reference
@@ -66,7 +76,7 @@ class PaymentRepositoryTest {
         assertEquals(PaymentState.Ready, repo.state.value)
     }
 
-    @Test fun emulatorSuccessWithZeroPaidAmountApprovesOnlyMatchingTransactions() {
+    @Test fun givenZeroPaidAmountWhenTransactionsMatchThenApproves() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         val reference = (repo.state.value as PaymentState.Active).attempt.reference
@@ -89,7 +99,7 @@ class PaymentRepositoryTest {
         assertEquals("order", (repo.state.value as PaymentState.Active).attempt.orderId)
     }
 
-    @Test fun cancellationAndMalformedReturnStayBlocked() {
+    @Test fun givenCancelledOrMalformedCallbackWhenReceivedThenRemainsBlocked() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         repo.acceptCallback(encoded("""{"code":1,"reason":"cancelado"}"""))
@@ -100,14 +110,14 @@ class PaymentRepositoryTest {
         assertTrue(repo.start(order, credentials) is StartResult.Failure)
     }
 
-    @Test fun rejectsInvalidTotalAndMissingCredentials() {
+    @Test fun givenInvalidTotalOrMissingCredentialsWhenStartingThenRejectsPayment() {
         val repo = PaymentRepositoryImpl(context, gateway)
         assertTrue(repo.start(order.copy(totalCents = 1), credentials) is StartResult.Failure)
         assertTrue(repo.start(order, credentials.copy(accessToken = "")) is StartResult.Failure)
         verify(exactly = 0) { gateway.launch(any(), any()) }
     }
 
-    @Test fun launchFailureRemainsBlocked() {
+    @Test fun givenLaunchFailureWhenStartingPaymentThenRemainsBlocked() {
         every { gateway.launch(any(), any()) } returns StartResult.Failure("indisponível")
         val repo = PaymentRepositoryImpl(context, gateway)
         assertTrue(repo.start(order, credentials) is StartResult.Failure)
@@ -115,7 +125,7 @@ class PaymentRepositoryTest {
         assertTrue(repo.start(order, credentials) is StartResult.Failure)
     }
 
-    @Test fun timedOutAttemptRemainsBlockedAfterRestart() {
+    @Test fun givenTimedOutAttemptWhenRestartedThenRemainsBlocked() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         val attempt = (repo.state.value as PaymentState.Active).attempt.copy(startedAtMillis = 0)
@@ -127,7 +137,7 @@ class PaymentRepositoryTest {
         assertTrue(restarted.start(order, credentials) is StartResult.Failure)
     }
 
-    @Test fun requestContainsAllItemsAndEncodedCallback() {
+    @Test fun givenOrderWhenBuildingRequestThenIncludesItemsAndCallback() {
         val attempt = PaymentAttempt("ref", order, 0, AttemptStatus.WAITING)
         val uri = paymentUri(attempt, credentials)
         assertEquals("lio", uri.scheme)
@@ -142,14 +152,14 @@ class PaymentRepositoryTest {
         assertEquals("500", item.getValue("unitPrice").jsonPrimitive.content)
     }
 
-    @Test fun releaseBuildCannotStartPayment() {
+    @Test fun givenReleaseBuildWhenStartingPaymentThenRejectsRequest() {
         context.applicationInfo.flags = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
         val repo = PaymentRepositoryImpl(context, gateway)
         assertTrue(repo.start(order, credentials) is StartResult.Failure)
         verify(exactly = 0) { gateway.launch(any(), any()) }
     }
 
-    @Test fun paymentErrorDoesNotMeanDeniedOrPermitRetry() {
+    @Test fun givenPaymentErrorWhenCallbackReceivedThenDoesNotPermitRetry() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         repo.acceptCallback(encoded("""{"code":3,"reason":"erro no pagamento"}"""))
@@ -160,7 +170,7 @@ class PaymentRepositoryTest {
         assertTrue(repo.start(order, credentials) is StartResult.Failure)
     }
 
-    @Test fun simulationCanBeDiscardedOnlyIfStateHasNotChanged() {
+    @Test fun givenAttemptWhenDiscardingThenRequiresUnchangedState() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         val oldState = repo.state.value
@@ -173,7 +183,7 @@ class PaymentRepositoryTest {
         assertEquals(StartResult.Started, repo.start(order, credentials))
     }
 
-    @Test fun allSimulatedAttemptStatesCanBeDiscardedAfterRestart() {
+    @Test fun givenAttemptStatesWhenRestoredThenCanDiscardEach() {
         for (status in AttemptStatus.entries) {
             val attempt = PaymentAttempt("ref", order, 1, status, orderId = "order")
             context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).edit()
@@ -184,7 +194,7 @@ class PaymentRepositoryTest {
         }
     }
 
-    @Test fun cancellationCanBeDiscardedButReleaseCannotDiscard() {
+    @Test fun givenCancelledAttemptWhenDiscardedThenReleaseStillRejectsDiscard() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
         repo.acceptCallback(encoded("""{"code":1}"""))
@@ -194,7 +204,7 @@ class PaymentRepositoryTest {
         assertEquals(DiscardSimulationResult.Discarded, repo.discardSimulation(repo.state.value))
     }
 
-    @Test fun legacyStoredAttemptWithoutErrorCodeRestores() {
+    @Test fun givenLegacyAttemptWithoutErrorCodeWhenRestoredThenLoadsAttempt() {
         val saved = """{"reference":"ref","order":{"userId":"user","fingerprint":"fingerprint","items":[""" +
             """{"sku":"sku","name":"Evento","quantity":2,"unitPriceCents":500}],"totalCents":1000},""" +
             """"startedAtMillis":0,"status":"ERROR"}"""
@@ -209,7 +219,7 @@ class PaymentRepositoryTest {
         )
     }
 
-    @Test fun failedDiscardPersistenceKeepsPaymentBlocked() {
+    @Test fun givenDiscardStorageFailureWhenDiscardingThenKeepsPaymentBlocked() {
         val attempt = PaymentAttempt("ref", order, 0, AttemptStatus.ERROR)
         val mockContext = mockk<Context>()
         val preferences = mockk<SharedPreferences>()
@@ -229,7 +239,7 @@ class PaymentRepositoryTest {
         verify(exactly = 0) { gateway.launch(any(), any()) }
     }
 
-    @Test fun corruptedStoredAttemptCanBeDiscarded() {
+    @Test fun givenCorruptedStoredAttemptWhenDiscardedThenClearsError() {
         context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).edit()
             .putString("attempt", "invalid").commit()
         val repo = PaymentRepositoryImpl(context, gateway)

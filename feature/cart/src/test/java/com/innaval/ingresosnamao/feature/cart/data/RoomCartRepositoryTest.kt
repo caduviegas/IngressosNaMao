@@ -25,7 +25,7 @@ class RoomCartRepositoryTest {
     private val repository = RoomCartRepository(source, dispatchers, availability)
     private val item = CartItem("event", "Show", 100, 1)
 
-    @Test fun validatesBeforeCallingDatabase() = runTest(dispatcher) {
+    @Test fun givenInvalidCartWhenSavingThenDoesNotCallDatabase() = runTest(dispatcher) {
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.add("", item))
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.add("u", item.copy(quantity = 0)))
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.setQuantity("u", "event", 0))
@@ -33,7 +33,7 @@ class RoomCartRepositoryTest {
         coVerify(exactly = 0) { source.setQuantity(any(), any(), any(), any()) }
     }
 
-    @Test fun observesAndRestoresOnlyRequestedAccount() = runTest(dispatcher) {
+    @Test fun givenAccountsWhenObservingCartThenRestoresOnlyRequestedAccount() = runTest(dispatcher) {
         every { source.observe("u") } returns flowOf(listOf(CartEntity("u", "event", "Show", 100, 2)))
         assertEquals(
             CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 2)), 200)),
@@ -41,14 +41,14 @@ class RoomCartRepositoryTest {
         )
     }
 
-    @Test fun reportsReadAndWriteErrorsWithoutEmptyFallback() = runTest(dispatcher) {
+    @Test fun givenDatabaseErrorsWhenReadingOrWritingThenReportsFailure() = runTest(dispatcher) {
         every { source.observe("u") } returns flow { throw IllegalStateException("db") }
         assertEquals(CartResult.Failure(CartError.STORAGE), repository.observe("u").first())
         coEvery { source.add("u", item, any()) } throws IllegalStateException("db")
         assertEquals(CartResult.Failure(CartError.STORAGE), repository.add("u", item))
     }
 
-    @Test fun propagatesCancellation() = runTest(dispatcher) {
+    @Test fun givenCancelledDatabaseCallWhenAccessingCartThenPropagatesCancellation() = runTest(dispatcher) {
         coEvery { source.add("u", item, any()) } throws CancellationException("cancelled")
         try {
             repository.add("u", item)
@@ -58,7 +58,7 @@ class RoomCartRepositoryTest {
         }
     }
 
-    @Test fun logoutReportsStorageFailureAndRejectsEmptyUid() = runTest(dispatcher) {
+    @Test fun givenStorageFailureOrEmptyUidWhenLoggingOutThenReportsError() = runTest(dispatcher) {
         coEvery { source.clearForLogout("u") } throws IllegalStateException("db")
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.clearForLogout(""))
         assertEquals(CartResult.Failure(CartError.STORAGE), repository.clearForLogout("u"))

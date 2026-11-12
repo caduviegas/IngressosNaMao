@@ -19,22 +19,22 @@ class AuthRepositoryImplTest {
     private val repository = AuthRepositoryImpl(auth, profiles)
     private val user = AuthUser("uid", "user@example.com")
 
-    @Test fun missingFirebaseConfigurationIsExplicit() = runTest {
+    @Test fun givenMissingFirebaseConfigurationWhenSigningInThenReturnsError() = runTest {
         every { auth.currentUser() } throws IllegalStateException("not configured")
         assertEquals(AuthResult.Failure(AuthError.CONFIGURATION), repository.currentUser())
     }
 
-    @Test fun networkFailureIsExplicit() = runTest {
+    @Test fun givenNetworkFailureWhenSigningInThenReturnsError() = runTest {
         coEvery { auth.login(any(), any()) } throws mockk<FirebaseNetworkException>()
         assertEquals(AuthResult.Failure(AuthError.NETWORK), repository.login(user.email, "secret"))
     }
 
-    @Test fun profileFailureIsNotReportedAsMissing() = runTest {
+    @Test fun givenProfileReadFailureWhenLoadingThenDoesNotReportMissing() = runTest {
         coEvery { profiles.get(user) } throws RuntimeException("read failed")
         assertEquals(AuthResult.Failure(AuthError.PROFILE_READ), repository.getProfile(user))
     }
 
-    @Test fun dataSourceCancellationPropagates() = runTest {
+    @Test fun givenCancelledDataSourceWhenSigningInThenPropagatesCancellation() = runTest {
         coEvery { profiles.get(user) } throws CancellationException("cancelled")
         try {
             repository.getProfile(user)

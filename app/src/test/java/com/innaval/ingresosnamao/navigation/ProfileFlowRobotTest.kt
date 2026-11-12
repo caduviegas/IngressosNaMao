@@ -2,8 +2,6 @@ package com.innaval.ingresosnamao.navigation
 
 import android.app.Application
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
@@ -45,7 +43,7 @@ import org.robolectric.annotation.Config
 class ProfileFlowRobotTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun logoutClearsCartAndRemovesAuthenticatedNavigationHistory() {
+    @Test fun givenAuthenticatedUserWhenLoggingOutThenClearsCartAndNavigationHistory() {
         val auth = mockk<AuthRepository>()
         val events = mockk<EventRepository>()
         val cart = mockk<CartRepository>()
@@ -88,11 +86,12 @@ class ProfileFlowRobotTest {
                 }
             }
         }
-        compose.onNodeWithText("Meu perfil").performClick()
-        compose.onNodeWithText("Alice").assertExists()
-        compose.onNodeWithText("Sair da conta").performClick()
-        compose.onNodeWithText("Sair").performClick()
-        compose.onNodeWithText("Entrar com Google").assertExists()
+        val robot = ProfileFlowRobot(compose)
+        robot.action.openProfile()
+        robot.result.profileShown()
+        robot.action.requestLogout()
+        robot.action.confirmLogout()
+        robot.result.loginShown()
         compose.runOnIdle {
             assertEquals("login", nav.currentDestination?.route)
             assertNull(nav.previousBackStackEntry)

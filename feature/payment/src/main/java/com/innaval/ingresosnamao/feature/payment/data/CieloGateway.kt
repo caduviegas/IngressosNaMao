@@ -78,15 +78,17 @@ class PaymentForegroundService : Service() {
         super.onCreate()
         val manager = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(NotificationChannel("payment_test", "Pagamento de teste", NotificationManager.IMPORTANCE_LOW))
+            manager.createNotificationChannel(
+                NotificationChannel("payment_test", "Pagamento", NotificationManager.IMPORTANCE_LOW)
+            )
         }
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, "payment_test")
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
-        }.setContentTitle("Pagamento de teste")
-            .setContentText("Aguardando retorno do emulador Cielo")
+        }.setContentTitle("Pagamento")
+            .setContentText("Aguardando retorno da Cielo")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .build()
         startForeground(781, notification)

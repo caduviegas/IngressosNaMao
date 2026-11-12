@@ -24,7 +24,7 @@ class EventRepositoryImplTest {
         """"price":"125.00","quantity":3}]"""
     private val events = listOf(Event("1", "https://example.com/a.jpg", "Show", 12500, 3))
 
-    @Test fun freshFetchUsesUnthrottledPathAndMarksFailuresStale() = runTest(dispatcher) {
+    @Test fun givenFreshFetchWhenItFailsThenUsesUnthrottledPathAndMarksStale() = runTest(dispatcher) {
         coEvery { source.fetchFreshAndActivate() } returns Unit
         every { source.activatedEvents() } returns json
         assertEquals(EventsResult.Success(EventList(events, false)), repository.getFreshEvents())
@@ -32,13 +32,13 @@ class EventRepositoryImplTest {
         assertEquals(EventsResult.Success(EventList(events, true)), repository.getFreshEvents())
     }
 
-    @Test fun loadsActivatedRemoteValue() = runTest(dispatcher) {
+    @Test fun givenActivatedRemoteValueWhenLoadedThenReturnsEvents() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } returns Unit
         every { source.activatedEvents() } returns json
         assertEquals(EventsResult.Success(EventList(events, false)), repository.getEvents())
     }
 
-    @Test fun failedFetchUsesOnlyActivatedCacheWithStaleFlag() = runTest(dispatcher) {
+    @Test fun givenFetchFailureWhenCacheExistsThenReturnsStaleCache() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } throws Exception("offline")
         every { source.activatedEvents() } returns json
         assertEquals(EventsResult.Success(EventList(events, true)), repository.getEvents())
@@ -50,18 +50,18 @@ class EventRepositoryImplTest {
         assertEquals(EventsResult.Failure(EventsError.INVALID_DATA), repository.getEvents())
     }
 
-    @Test fun missingKeyDoesNotBecomeEmptyList() = runTest(dispatcher) {
+    @Test fun givenMissingKeyWhenEventsRequestedThenReturnsError() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } returns Unit
         every { source.activatedEvents() } returns null
         assertEquals(EventsResult.Failure(EventsError.MISSING_DATA), repository.getEvents())
     }
 
-    @Test fun missingFirebaseConfigurationIsExplicit() = runTest(dispatcher) {
+    @Test fun givenMissingFirebaseConfigurationWhenEventsRequestedThenReturnsError() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } throws IllegalStateException("Firebase not initialized")
         assertEquals(EventsResult.Failure(EventsError.CONFIGURATION), repository.getEvents())
     }
 
-    @Test fun cancellationPropagates() = runTest(dispatcher) {
+    @Test fun givenCancelledFetchWhenEventsRequestedThenPropagatesCancellation() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } throws CancellationException("cancelled")
         try {
             repository.getEvents()

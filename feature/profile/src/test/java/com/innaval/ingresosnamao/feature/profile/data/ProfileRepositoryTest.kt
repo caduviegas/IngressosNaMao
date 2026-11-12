@@ -20,7 +20,7 @@ class ProfileRepositoryTest {
     private val repo = FirebaseProfileRepository(auth, documents)
     private val identity = ProfileIdentity("uid", "Nome Firebase", "user@example.com")
 
-    @Test fun loadsProfileAndMarksCachedData() = runTest {
+    @Test fun givenCachedProfileWhenLoadedThenMarksDataAsCached() = runTest {
         every { auth.currentUser() } returns identity
         coEvery { documents.get("uid") } returns ProfileDocument(
             mapOf("name" to " Ana ", "email" to "USER@example.com", "address" to " Rua 1 "), true
@@ -31,7 +31,7 @@ class ProfileRepositoryTest {
         )
     }
 
-    @Test fun missingDocumentAndFieldsUseAvailableIdentityWithoutCrashing() = runTest {
+    @Test fun givenMissingProfileFieldsWhenLoadedThenUsesAvailableIdentity() = runTest {
         every { auth.currentUser() } returns identity
         coEvery { documents.get("uid") } returns ProfileDocument(null, false)
         assertEquals(
@@ -44,7 +44,7 @@ class ProfileRepositoryTest {
         assertEquals(ProfileResult.Success(UserProfile(null, null, null, false)), repo.load(noData))
     }
 
-    @Test fun invalidFieldsAndConflictingEmailAreErrors() = runTest {
+    @Test fun givenInvalidFieldsOrConflictingEmailWhenLoadedThenReturnsError() = runTest {
         every { auth.currentUser() } returns identity
         coEvery { documents.get("uid") } returns ProfileDocument(mapOf("address" to 12), false)
         assertEquals(ProfileResult.Failure(ProfileError.INVALID_DATA), repo.load(identity))
@@ -52,7 +52,7 @@ class ProfileRepositoryTest {
         assertEquals(ProfileResult.Failure(ProfileError.INVALID_DATA), repo.load(identity))
     }
 
-    @Test fun readErrorsAndSessionChangesAreExplicit() = runTest {
+    @Test fun givenReadErrorOrSessionChangeWhenLoadingThenReturnsError() = runTest {
         every { auth.currentUser() } returns identity
         coEvery { documents.get("uid") } throws IllegalStateException("firestore")
         assertEquals(ProfileResult.Failure(ProfileError.READ), repo.load(identity))
@@ -61,7 +61,7 @@ class ProfileRepositoryTest {
         assertEquals(ProfileResult.Failure(ProfileError.SESSION_CHANGED), repo.load(identity))
     }
 
-    @Test fun signOutDoesNotDisconnectAnotherSession() = runTest {
+    @Test fun givenDifferentSessionWhenSigningOutThenDoesNotDisconnectIt() = runTest {
         every { auth.currentUser() } returns identity.copy(uid = "other")
         assertEquals(ProfileResult.Failure(ProfileError.SESSION_CHANGED), repo.signOut("uid"))
         verify(exactly = 0) { auth.signOut() }
@@ -71,7 +71,7 @@ class ProfileRepositoryTest {
         verify(exactly = 1) { auth.signOut() }
     }
 
-    @Test fun currentUserErrorsAndCancellationAreNotSuccess() = runTest {
+    @Test fun givenCurrentUserFailureWhenLoadingThenReportsErrorOrCancellation() = runTest {
         every { auth.currentUser() } throws IllegalStateException("auth")
         assertEquals(ProfileResult.Failure(ProfileError.AUTH), repo.currentUser())
         every { auth.currentUser() } returns identity

@@ -20,8 +20,15 @@ de compra e fornecer uma medição reproduzível da cobertura do código de prod
 
 Cada feature mantém seus testes em `feature/<nome>/src/test`; testes de infraestrutura ficam no
 core correspondente, e testes de composição e navegação em `app/src/test`. Testes de UI usam
-robots próprios da feature sem introduzir dependências entre features. O banco de testes é em
+robots próprios da feature sem introduzir dependências entre features. Os arquivos `*Robot.kt`
+separam interações em `Action` e verificações de interface em `Result`; os testes em
+`*RobotTest.kt` usam essas duas partes. A mesma estrutura é usada em testes Compose instrumentados
+e Robolectric, sem substituir testes em dispositivo por simulação JVM. O banco de testes é em
 memória e os contêineres Koin são isolados e encerrados.
+
+Nomeie cada teste no formato `given<Contexto>When<Acao>Then<Resultado>`, usando camelCase
+para manter compatibilidade com os testes JVM e instrumentados. O nome deve descrever o cenário
+e o comportamento verificado; helpers, configurações e classes não precisam seguir esse formato.
 
 ## Estados críticos
 

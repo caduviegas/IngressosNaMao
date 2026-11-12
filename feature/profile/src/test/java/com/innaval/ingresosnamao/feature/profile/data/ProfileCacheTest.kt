@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 class ProfileCacheTest {
     private val unavailable = FirebaseFirestoreException("offline", FirebaseFirestoreException.Code.UNAVAILABLE)
 
-    @Test fun usesOnlyConfirmedCacheOnNetworkFailure() = runTest {
+    @Test fun givenNetworkFailureWhenLoadingProfileThenUsesOnlyConfirmedCache() = runTest {
         assertEquals("server", readConfirmedProfile({ "server" }, { "cache" }, { true }))
         assertEquals("cache", readConfirmedProfile({ throw unavailable }, { "cache" }, { true }))
         try {
@@ -27,7 +27,7 @@ class ProfileCacheTest {
         }
     }
 
-    @Test fun permissionFailureNeverReadsCache() = runTest {
+    @Test fun givenPermissionFailureWhenLoadingProfileThenDoesNotReadCache() = runTest {
         val denied = FirebaseFirestoreException("denied", FirebaseFirestoreException.Code.PERMISSION_DENIED)
         var cacheRead = false
         try {
@@ -39,7 +39,7 @@ class ProfileCacheTest {
         }
     }
 
-    @Test fun cacheErrorsPreserveOriginalFailureAndCancellationPropagates() = runTest {
+    @Test fun givenCacheFailureWhenLoadingProfileThenPreservesFailureOrCancellation() = runTest {
         val cacheError = IllegalStateException("cache")
         try {
             readConfirmedProfile<String>({ throw unavailable }, { throw cacheError }, { true })

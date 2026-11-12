@@ -1,6 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val cieloProperties = Properties().apply {
+    val file = rootProject.file("cielo.local.properties")
+    if (file.isFile) file.inputStream().use(::load)
+}
+
+fun cieloCredential(name: String): String {
+    val value = providers.environmentVariable(name).orNull ?: cieloProperties.getProperty(name).orEmpty()
+    require(value.isEmpty() || value.matches(Regex("[A-Za-z0-9_-]+"))) {
+        "Invalid Cielo credential format: $name"
+    }
+    return "\"$value\""
 }
 
 if (file("google-services.json").exists()) {
@@ -21,11 +36,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "CIELO_CLIENT_ID", "\"\"")
+        buildConfigField("String", "CIELO_ACCESS_TOKEN", "\"\"")
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"https://api.dev.ingressosnamao.example/\"")
+            buildConfigField("String", "CIELO_CLIENT_ID", cieloCredential("CIELO_CLIENT_ID"))
+            buildConfigField("String", "CIELO_ACCESS_TOKEN", cieloCredential("CIELO_ACCESS_TOKEN"))
         }
         release {
             buildConfigField("String", "API_BASE_URL", "\"https://api.ingressosnamao.example/\"")
@@ -63,6 +82,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.material.icons)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

@@ -38,7 +38,7 @@ class CartViewModelTest {
         ValidateCartAvailabilityUseCase(availability),
     )
 
-    @Test fun restoresContentAndPreventsRemovalViaDecrement() = runTest(dispatcher) {
+    @Test fun givenStoredCartWhenRestoredThenDecrementDoesNotRemoveItem() = runTest(dispatcher) {
         every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
         val vm = viewModel()
         advanceUntilIdle()
@@ -47,7 +47,7 @@ class CartViewModelTest {
         coVerify(exactly = 0) { repository.setQuantity(any(), any(), any()) }
     }
 
-    @Test fun failureIsNotEmptyAndRetryRestores() = runTest(dispatcher) {
+    @Test fun givenLoadFailureWhenRetriedThenRestoresCart() = runTest(dispatcher) {
         every { repository.observe("user") } returnsMany listOf(
             flowOf(CartResult.Failure(CartError.STORAGE)),
             flowOf(CartResult.Success(cart)),
@@ -61,7 +61,7 @@ class CartViewModelTest {
         assertEquals(cart, vm.state.value.cart)
     }
 
-    @Test fun duplicateOperationsAreBlockedAndErrorsAreExplicit() = runTest(dispatcher) {
+    @Test fun givenPendingOperationWhenRepeatedThenBlocksDuplicateAndShowsErrors() = runTest(dispatcher) {
         every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
         val pending = CompletableDeferred<CartResult<Unit>>()
         coEvery { repository.remove("user", "event") } coAnswers { pending.await() }
@@ -78,7 +78,7 @@ class CartViewModelTest {
         coVerify(exactly = 1) { repository.remove("user", "event") }
     }
 
-    @Test fun checkoutReadsLatestDatabaseTotal() = runTest(dispatcher) {
+    @Test fun givenUpdatedCartWhenCheckingOutThenReadsLatestTotal() = runTest(dispatcher) {
         coEvery { availability.load() } returns CartResult.Success(listOf(AvailableEvent("event", 100, 2)))
         every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
         coEvery { repository.get("user") } returns CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 2)), 200))
@@ -90,7 +90,7 @@ class CartViewModelTest {
         assertEquals(200L, amount)
     }
 
-    @Test fun freeCartCannotStartPayment() = runTest(dispatcher) {
+    @Test fun givenFreeCartWhenCheckingOutThenDoesNotStartPayment() = runTest(dispatcher) {
         val free = CartSnapshot(listOf(item.copy(unitPriceCents = 0)), 0)
         every { repository.observe("user") } returns flowOf(CartResult.Success(free))
         coEvery { repository.get("user") } returns CartResult.Success(free)
@@ -103,7 +103,7 @@ class CartViewModelTest {
         assertEquals(CartError.FREE_CHECKOUT_UNSUPPORTED, vm.state.value.error)
     }
 
-    @Test fun checkoutBlocksOutdatedStockAndNetworkFailure() = runTest(dispatcher) {
+    @Test fun givenUnavailableStockOrNetworkWhenCheckingOutThenBlocksPayment() = runTest(dispatcher) {
         every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
         coEvery { repository.get("user") } returns CartResult.Success(cart)
         coEvery { availability.load() } returnsMany listOf(
