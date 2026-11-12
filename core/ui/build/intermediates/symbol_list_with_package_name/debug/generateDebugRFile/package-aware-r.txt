@@ -1,1 +1,3 @@
 com.innaval.ingresosnamao.core.ui
+string ingressos_loading
+string ingressos_retry

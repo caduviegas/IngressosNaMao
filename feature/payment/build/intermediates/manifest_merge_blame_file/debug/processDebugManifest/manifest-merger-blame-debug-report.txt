@@ -6,4 +6,65 @@
 5-->INJECTED
 5-->INJECTED
 6
-7</manifest>
+7    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+7-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:2:5-77
+7-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:2:22-74
+8    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+8-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:3:5-87
+8-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:3:22-84
+9
+10    <queries>
+10-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:4:5-7:15
+11        <package android:name="com.ads.lio.uriappclient" />
+11-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:5:9-60
+11-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:5:18-57
+12        <package android:name="br.com.cielosmart.orderservice" />
+12-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:6:9-66
+12-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:6:18-63
+13    </queries>
+14
+15    <application>
+15-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:8:5-23:19
+16        <meta-data
+16-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:9:9-77
+17            android:name="cs_integration_type"
+17-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:9:20-54
+18            android:value="uri" />
+18-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:9:55-74
+19
+20        <service
+20-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:10:9-13:56
+21            android:name="com.innaval.ingresosnamao.feature.payment.data.PaymentForegroundService"
+21-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:11:13-99
+22            android:exported="false"
+22-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:12:13-37
+23            android:foregroundServiceType="dataSync" />
+23-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:13:13-53
+24
+25        <activity
+25-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:14:9-22:20
+26            android:name="com.innaval.ingresosnamao.feature.payment.presentation.PaymentCallbackActivity"
+26-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:15:13-106
+27            android:exported="true" >
+27-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:16:13-36
+28            <intent-filter>
+28-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:17:13-21:29
+29                <action android:name="android.intent.action.VIEW" />
+29-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:18:17-69
+29-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:18:25-66
+30
+31                <category android:name="android.intent.category.DEFAULT" />
+31-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:19:17-76
+31-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:19:27-73
+32
+33                <data
+33-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:20:17-89
+34                    android:host="response"
+34-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:20:63-86
+35                    android:scheme="ingressosnamao-payment" />
+35-->/Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/AndroidManifest.xml:20:23-62
+36            </intent-filter>
+37        </activity>
+38    </application>
+39
+40</manifest>

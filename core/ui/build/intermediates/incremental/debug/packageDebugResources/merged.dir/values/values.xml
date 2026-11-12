@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ingressos_loading">Carregando</string>
+    <string name="ingressos_retry">Tentar novamente</string>
+</resources>

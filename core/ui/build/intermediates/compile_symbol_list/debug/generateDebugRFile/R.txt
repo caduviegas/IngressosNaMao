@@ -1,0 +1,2 @@
+int string ingressos_loading 0x0
+int string ingressos_retry 0x0
