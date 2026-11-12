@@ -31,7 +31,6 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"https://api.ingressosnamao.example/\"")
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
     }

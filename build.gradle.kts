@@ -142,6 +142,6 @@ tasks.register<JacocoCoverageVerification>("jacocoDebugCoverageVerification") {
 
 tasks.register("qualityCheck") {
     group = "verification"
-    description = "Runs static analysis, tests, coverage verification and the debug build."
-    dependsOn("detekt", "jacocoDebugCoverageVerification", ":app:assembleDebug")
+    description = "Runs static analysis, tests, coverage verification and debug/release builds."
+    dependsOn("detekt", "jacocoDebugCoverageVerification", ":app:assembleDebug", ":app:assembleRelease")
 }
