@@ -44,6 +44,7 @@ import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.BuildConfig
 import com.innaval.ingresosnamao.feature.events.presentation.EventsRoute
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentRoute
+import com.innaval.ingresosnamao.feature.payment.presentation.SimulationRecoveryAction
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketsRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.ReceiptRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketDetailRoute
@@ -98,6 +99,9 @@ fun AppNavHost() {
                     TextButton(onClick = { nav.navigate(Routes.cleanup(userId, attempt.order.fingerprint)) }) {
                         Text("Concluir pagamento de teste pendente")
                     }
+                }
+                if (BuildConfig.DEBUG && paymentState != PaymentState.Ready) {
+                    SimulationRecoveryAction(paymentState)
                 }
                 EventsRoute(
                     adding = adding,

@@ -54,4 +54,13 @@ class PaymentViewModelTest {
         assertEquals(false, viewModel.validating.value)
         verify(exactly = 0) { repository.start(any(), any()) }
     }
+
+    @Test fun discardFailureIsDisplayed() {
+        val state = PaymentState.StorageError("Falha")
+        every { repository.discardSimulation(state) } returns
+            DiscardSimulationResult.Failure("Não foi possível remover a tentativa de teste.")
+        val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
+        viewModel.discardSimulation(state)
+        assertEquals("Não foi possível remover a tentativa de teste.", viewModel.error.value)
+    }
 }
