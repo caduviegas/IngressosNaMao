@@ -1,0 +1,183 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Cart.kt:items.any { it.eventId.isBlank() || it.eventName.isBlank() || it.quantity &lt;= 0 || it.unitPriceCents &lt; 0 } || items.map { it.eventId }.toSet().size != items.size</ID>
+    <ID>ComplexCondition:CartViewModel.kt:CartViewModel$(delta == -1 &amp;&amp; item.quantity &lt;= 1) || (delta == 1 &amp;&amp; item.quantity == Int.MAX_VALUE)</ID>
+    <ID>ComplexCondition:Payment.kt:order.userId.isBlank() || order.fingerprint.isBlank() || order.items.isEmpty() || order.items.any { it.sku.isBlank() || it.name.isBlank() || it.quantity &lt;= 0 || it.unitPriceCents &lt; 0 } || order.items.map { it.sku }.distinct().size != order.items.size</ID>
+    <ID>ComplexCondition:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$reference == attempt.reference &amp;&amp; !orderId.isNullOrBlank() &amp;&amp; paid == attempt.order.totalCents &amp;&amp; pending == 0L &amp;&amp; authorized &amp;&amp; paymentTotal == paid</ID>
+    <ID>ComplexCondition:SimulatedPurchase.kt:!enabled || attempt?.status != AttemptStatus.APPROVED || attempt.order.userId != userId || attempt.order.fingerprint != fingerprint || orderId.isNullOrBlank()</ID>
+    <ID>ComplexCondition:Ticket.kt:IssueTicketsUseCase$purchase.reference.isBlank() || purchase.orderId.isBlank() || purchase.userId.isBlank() || purchase.fingerprint.isBlank() || !validPurchaseItems(purchase.items, purchase.totalCents)</ID>
+    <ID>ComplexCondition:Ticket.kt:items.isEmpty() || items.any { it.eventId.isBlank() || it.eventName.isBlank() || it.quantity &lt;= 0 || it.unitPriceCents &lt; 0 } || items.map { it.eventId }.distinct().size != items.size</ID>
+    <ID>ComplexCondition:TicketRepositoryImpl.kt:TicketRepositoryImpl$existing.orderId != purchase.orderId || existing.userId != purchase.userId || existing.fingerprint != purchase.fingerprint || existing.totalCents != purchase.totalCents || expected != actual</ID>
+    <ID>ComplexCondition:TicketRepositoryImpl.kt:TicketRepositoryImpl$purchase.reference.isBlank() || purchase.orderId.isBlank() || purchase.userId.isBlank() || purchase.fingerprint.isBlank() || !validPurchaseItems(purchase.items, purchase.totalCents)</ID>
+    <ID>CyclomaticComplexMethod:AppNavHost.kt:@Composable fun AppNavHost</ID>
+    <ID>CyclomaticComplexMethod:LoginScreen.kt:@Composable fun AuthScreen</ID>
+    <ID>CyclomaticComplexMethod:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$@Synchronized override fun acceptCallback</ID>
+    <ID>CyclomaticComplexMethod:TicketRepositoryImpl.kt:TicketRepositoryImpl$override suspend fun issue: TicketResult&lt;Receipt&gt;</ID>
+    <ID>LongMethod:AppNavHost.kt:@Composable fun AppNavHost</ID>
+    <ID>LongMethod:LoginScreen.kt:@Composable fun AuthScreen</ID>
+    <ID>LongMethod:PurchaseFlowRobotTest.kt:PurchaseFlowRobotTest$@Test fun approvedSimulationEmitsTicketBeforeClearingCart</ID>
+    <ID>MagicNumber:Auth.kt:AuthValidation$100</ID>
+    <ID>MagicNumber:Auth.kt:AuthValidation$128</ID>
+    <ID>MagicNumber:Auth.kt:AuthValidation$254</ID>
+    <ID>MagicNumber:Auth.kt:AuthValidation$300</ID>
+    <ID>MagicNumber:Auth.kt:AuthValidation$6</ID>
+    <ID>MagicNumber:Cart.kt:0xff</ID>
+    <ID>MagicNumber:CieloGateway.kt:PaymentForegroundService$120_000L</ID>
+    <ID>MagicNumber:CieloGateway.kt:PaymentForegroundService$781</ID>
+    <ID>MagicNumber:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$120_000L</ID>
+    <ID>MagicNumber:PaymentScreen.kt:PaymentViewModel$1_000</ID>
+    <ID>MagicNumber:Tokens.kt:ExtraColors$0xFF002107</ID>
+    <ID>MagicNumber:Tokens.kt:ExtraColors$0xFFA3F7A5</ID>
+    <ID>MatchingDeclarationName:Color.kt:Palette</ID>
+    <ID>MatchingDeclarationName:Components.kt:IngressosButtonStyle</ID>
+    <ID>MatchingDeclarationName:NetworkModule.kt:NetworkConfig</ID>
+    <ID>MatchingDeclarationName:PaymentScreen.kt:PaymentViewModel : ViewModel</ID>
+    <ID>MaxLineLength:AppDatabase.kt:AppDatabase$@Database(entities = [TicketEntity::class, CartEntity::class, TicketPurchaseEntity::class, IssuedTicketEntity::class], version = 3, exportSchema = true)</ID>
+    <ID>MaxLineLength:AppNavHost.kt:ErrorState("A compra deve conter até 100 ingressos e um total válido.", { nav.popBackStack() }, retryLabel = "Voltar")</ID>
+    <ID>MaxLineLength:AppNavHost.kt:ErrorState("Não há aprovação de teste para este carrinho.", { nav.popBackStack() }, retryLabel = "Voltar")</ID>
+    <ID>MaxLineLength:AppNavHost.kt:ErrorState("O carrinho foi alterado. Volte e tente novamente.", { nav.popBackStack() }, retryLabel = "Voltar")</ID>
+    <ID>MaxLineLength:AppNavHost.kt:ReceiptRoute(userId, reference, onTicket = { nav.navigate(Routes.ticket(userId, it)) }, onBack = { nav.popBackStack() })</ID>
+    <ID>MaxLineLength:AppNavHost.kt:Routes$fun payment</ID>
+    <ID>MaxLineLength:AppNavHost.kt:Text("Falha ao salvar o estado do pagamento. Os ingressos de teste já emitidos podem ser consultados; não pague novamente.")</ID>
+    <ID>MaxLineLength:AppNavHost.kt:TicketError.CONFLICT -&gt; "Os dados da compra conflitam com uma emissão existente; não pague novamente."</ID>
+    <ID>MaxLineLength:AppNavHost.kt:TicketError.INVALID_PURCHASE -&gt; "Dados da compra inválidos ou limite de 100 ingressos excedido; não pague novamente."</ID>
+    <ID>MaxLineLength:AppNavHost.kt:TicketError.STORAGE -&gt; "Falha ao salvar os ingressos de teste. Tente novamente sem pagar outra vez."</ID>
+    <ID>MaxLineLength:AppNavHost.kt:TicketsRoute(userId, onReceipt = { nav.navigate(Routes.receipt(userId, it)) }, onBack = { nav.popBackStack() })</ID>
+    <ID>MaxLineLength:AppNavHost.kt:if (!acknowledgementError) nav.navigate(Routes.receipt(userId, reference)) { popUpTo(Routes.EVENTS) }</ID>
+    <ID>MaxLineLength:AppNavHost.kt:is CartResult.Failure -&gt; ErrorState(cartErrorMessage(result.error), { nav.popBackStack() }, retryLabel = "Voltar")</ID>
+    <ID>MaxLineLength:AppNavHost.kt:onPaid = { nav.navigate(Routes.cleanup(userId, fingerprint)) { popUpTo(Routes.PAYMENT) { inclusive = true } } }</ID>
+    <ID>MaxLineLength:Cart.kt:ClearCartUseCase$suspend operator fun invoke</ID>
+    <ID>MaxLineLength:CartRoomTest.kt:CartRoomTest$CartResult.Success(CartSnapshot(listOf(item.copy(eventName = "Novo", unitPriceCents = 150, quantity = 3)), 450))</ID>
+    <ID>MaxLineLength:CartRoomTest.kt:CartRoomTest$db.execSQL("CREATE TABLE IF NOT EXISTS tickets (id TEXT NOT NULL PRIMARY KEY, eventId TEXT NOT NULL, eventName TEXT NOT NULL, qrCode TEXT NOT NULL)")</ID>
+    <ID>MaxLineLength:CartScreen.kt:CartScreen(state, viewModel::changeQuantity, viewModel::remove, { viewModel.checkout(onCheckout) }, onBack, viewModel::retry)</ID>
+    <ID>MaxLineLength:CartScreen.kt:ErrorState("Pagamento confirmado, mas não foi possível limpar o carrinho. Tente novamente.", viewModel::retry)</ID>
+    <ID>MaxLineLength:CartScreen.kt:Text("Pagamento confirmado. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")</ID>
+    <ID>MaxLineLength:CartScreen.kt:modifier = Modifier.semantics { contentDescription = "Aumentar quantidade de ${item.eventName}" }</ID>
+    <ID>MaxLineLength:CartScreen.kt:modifier = Modifier.semantics { contentDescription = "Diminuir quantidade de ${item.eventName}" }</ID>
+    <ID>MaxLineLength:CartTest.kt:CartTest$assertEquals(CartResult.Failure(CartError.LIMIT_EXCEEDED), calculateCart(listOf(good.copy(unitPriceCents = Long.MAX_VALUE), good.copy(eventId = "2"))))</ID>
+    <ID>MaxLineLength:CartTest.kt:CartTest$assertEquals(CartResult.Failure(CartError.LIMIT_EXCEEDED), calculateCart(listOf(good.copy(unitPriceCents = Long.MAX_VALUE, quantity = 2))))</ID>
+    <ID>MaxLineLength:CartViewModel.kt:CartViewModel$is CartResult.Failure -&gt; mutableState.update { it.copy(busy = false, cart = null, error = refreshed.error) }</ID>
+    <ID>MaxLineLength:CartViewModel.kt:CartViewModel$mutableState.update { it.copy(busy = false, cart = cart, error = CartError.FREE_CHECKOUT_UNSUPPORTED) }</ID>
+    <ID>MaxLineLength:CartViewModelTest.kt:CartViewModelTest$coEvery { repository.get("user") } returns CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 2)), 200))</ID>
+    <ID>MaxLineLength:CieloGateway.kt:PaymentForegroundService$manager.createNotificationChannel(NotificationChannel("payment_test", "Pagamento de teste", NotificationManager.IMPORTANCE_LOW))</ID>
+    <ID>MaxLineLength:Components.kt:Column</ID>
+    <ID>MaxLineLength:Components.kt:IngressosButtonStyle.Outlined -&gt; OutlinedButton(onClick, buttonModifier, enabled = enabled &amp;&amp; !loading) { content() }</ID>
+    <ID>MaxLineLength:Components.kt:IngressosButtonStyle.Secondary -&gt; FilledTonalButton(onClick, buttonModifier, enabled = enabled &amp;&amp; !loading) { content() }</ID>
+    <ID>MaxLineLength:Components.kt:Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })</ID>
+    <ID>MaxLineLength:Components.kt:if (actionLabel != null &amp;&amp; onAction != null) IngressosButton(actionLabel, onAction, style = IngressosButtonStyle.Outlined)</ID>
+    <ID>MaxLineLength:Components.kt:modifier = if (errorMessage != null) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier</ID>
+    <ID>MaxLineLength:ComponentsTest.kt:ComponentsTest$.</ID>
+    <ID>MaxLineLength:DatabaseModule.kt:&lt;no name provided&gt;$db.execSQL("CREATE INDEX IF NOT EXISTS `index_issued_tickets_purchaseReference` ON `issued_tickets` (`purchaseReference`)")</ID>
+    <ID>MaxLineLength:DatabaseModule.kt:&lt;no name provided&gt;$db.execSQL("CREATE TABLE IF NOT EXISTS `issued_tickets` (`id` TEXT NOT NULL, `purchaseReference` TEXT NOT NULL, `eventId` TEXT NOT NULL, `eventName` TEXT NOT NULL, `unitPriceCents` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`purchaseReference`) REFERENCES `ticket_purchases`(`reference`) ON UPDATE NO ACTION ON DELETE CASCADE)")</ID>
+    <ID>MaxLineLength:DatabaseModule.kt:&lt;no name provided&gt;$db.execSQL("CREATE TABLE IF NOT EXISTS `ticket_purchases` (`reference` TEXT NOT NULL, `orderId` TEXT NOT NULL, `userId` TEXT NOT NULL, `fingerprint` TEXT NOT NULL, `totalCents` INTEGER NOT NULL, `issuedAtMillis` INTEGER NOT NULL, PRIMARY KEY(`reference`))")</ID>
+    <ID>MaxLineLength:DatabaseModule.kt:&lt;no name provided&gt;$db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_ticket_purchases_orderId` ON `ticket_purchases` (`orderId`)")</ID>
+    <ID>MaxLineLength:EventRepositoryImpl.kt:EventRepositoryImpl$return@withContext EventsResult.Failure(if (fetchFailed) EventsError.UNAVAILABLE else EventsError.MISSING_DATA)</ID>
+    <ID>MaxLineLength:EventsJsonParserTest.kt:EventsJsonParserTest$assertEquals(123L, parser.parse("""[{"id":"1","imageUrl":"https://example.com","name":"N","price":1.230}]""").single().priceCents)</ID>
+    <ID>MaxLineLength:EventsScreen.kt:cartError?.let { Text(it, Modifier.padding(IngressosTheme.spacing.md), color = MaterialTheme.colorScheme.error) }</ID>
+    <ID>MaxLineLength:EventsViewModelTest.kt:EventsViewModelTest$EventsUiState.Content(listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents)), false)</ID>
+    <ID>MaxLineLength:EventsViewModelTest.kt:EventsViewModelTest$EventsUiState.Content(listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents)), true)</ID>
+    <ID>MaxLineLength:IssueTicketsUseCaseTest.kt:IssueTicketsUseCaseTest$assertEquals(false, validPurchaseItems(listOf(PurchaseItem("event", "Show", Long.MAX_VALUE, 2)), Long.MAX_VALUE))</ID>
+    <ID>MaxLineLength:IssueTicketsUseCaseTest.kt:IssueTicketsUseCaseTest$private val purchase = SimulatedPurchase("ref", "order", "user", "fp", 100, listOf(PurchaseItem("event", "Show", 100, 1)))</ID>
+    <ID>MaxLineLength:IssuedTicketEntity.kt:IssuedTicketDao$@Query("SELECT t.* FROM issued_tickets t JOIN ticket_purchases p ON p.reference = t.purchaseReference WHERE p.userId = :userId AND p.reference = :reference ORDER BY t.eventName, t.id")</ID>
+    <ID>MaxLineLength:IssuedTicketEntity.kt:IssuedTicketDao$@Query("SELECT t.* FROM issued_tickets t JOIN ticket_purchases p ON p.reference = t.purchaseReference WHERE p.userId = :userId AND t.id = :id")</ID>
+    <ID>MaxLineLength:LoginScreen.kt:if</ID>
+    <ID>MaxLineLength:OfflineProfileTest.kt:OfflineProfileTest$server = { throw unavailable }</ID>
+    <ID>MaxLineLength:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$if</ID>
+    <ID>MaxLineLength:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$if (state.value != PaymentState.Ready) return StartResult.Failure("Existe uma tentativa anterior que exige conciliação.")</ID>
+    <ID>MaxLineLength:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$val attempt = PaymentAttempt(UUID.randomUUID().toString(), order, System.currentTimeMillis(), AttemptStatus.WAITING)</ID>
+    <ID>MaxLineLength:PaymentRepositoryTest.kt:PaymentRepositoryTest$"""{"reference":"$ref","id":"order","paidAmount":$paid,"pendingAmount":0,"payments":[{"amount":1000,"paymentFields":{"statusCode":"1"}}]}"""</ID>
+    <ID>MaxLineLength:PaymentRepositoryTest.kt:PaymentRepositoryTest$assertFalse(context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).all.toString().contains("test-token"))</ID>
+    <ID>MaxLineLength:PaymentRepositoryTest.kt:PaymentRepositoryTest$assertNotNull(context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).getString("attempt", null))</ID>
+    <ID>MaxLineLength:PaymentRepositoryTest.kt:PaymentRepositoryTest$val request = Json.parseToJsonElement(String(Base64.decode(uri.getQueryParameter("request"), Base64.DEFAULT))).jsonObject</ID>
+    <ID>MaxLineLength:PaymentRobotTest.kt:PaymentRobotTest$compose.onNodeWithText("Cancelamento recebido sem identificação verificável. A tentativa permanece bloqueada.").assertExists()</ID>
+    <ID>MaxLineLength:PaymentRobotTest.kt:PaymentRobotTest$compose.onNodeWithText("Erro recebido sem identificação verificável. A tentativa permanece bloqueada.").assertExists()</ID>
+    <ID>MaxLineLength:PaymentRobotTest.kt:PaymentRobotTest$compose.onNodeWithText("Há outra tentativa neste dispositivo. Resolva-a antes de iniciar outro pagamento.").assertExists()</ID>
+    <ID>MaxLineLength:PaymentScreen.kt:AttemptStatus.CANCELLED -&gt; Text("Cancelamento recebido sem identificação verificável. A tentativa permanece bloqueada.")</ID>
+    <ID>MaxLineLength:PaymentScreen.kt:AttemptStatus.ERROR -&gt; Text("Erro recebido sem identificação verificável. A tentativa permanece bloqueada.")</ID>
+    <ID>MaxLineLength:PaymentScreen.kt:AttemptStatus.UNKNOWN -&gt; Text("Resultado desconhecido. Concilie a tentativa antes de outro pagamento.")</ID>
+    <ID>MaxLineLength:RoomCartRepository.kt:CartLocalDataSource$suspend</ID>
+    <ID>MaxLineLength:RoomCartRepository.kt:RoomCartRepository$override suspend</ID>
+    <ID>MaxLineLength:Surfaces.kt:TopAppBar(title = { Text(title, modifier = Modifier.semantics { heading() }) }, modifier = modifier, navigationIcon = navigationIcon, actions = actions)</ID>
+    <ID>MaxLineLength:TicketRepositoryImpl.kt:TicketRepositoryImpl$existing.fingerprint != purchase.fingerprint</ID>
+    <ID>MaxLineLength:TicketRepositoryImpl.kt:TicketRepositoryImpl$return</ID>
+    <ID>MaxLineLength:TicketRoomTest.kt:TicketRoomTest$assertEquals(TicketResult.Failure(TicketError.CONFLICT), repo.issue(purchase.copy(items = listOf(PurchaseItem("other", "Show", 100, 3)))))</ID>
+    <ID>MaxLineLength:TicketRoomTest.kt:TicketRoomTest$db.execSQL("CREATE TABLE cart_items (userId TEXT NOT NULL, eventId TEXT NOT NULL, eventName TEXT NOT NULL, unitPriceCents INTEGER NOT NULL, quantity INTEGER NOT NULL, PRIMARY KEY(userId, eventId))")</ID>
+    <ID>MaxLineLength:TicketRoomTest.kt:TicketRoomTest$db.execSQL("CREATE TABLE tickets (id TEXT NOT NULL PRIMARY KEY, eventId TEXT NOT NULL, eventName TEXT NOT NULL, qrCode TEXT NOT NULL)")</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:Bitmap.createBitmap(qr.pattern.pixels, qr.pattern.size, qr.pattern.size, Bitmap.Config.ARGB_8888).asImageBitmap()</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:Image(bitmap, contentDescription = "QR Code do ingresso de teste", modifier = Modifier.size(256.dp))</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:Text("Emitido: ${DateFormat.getDateTimeInstance().format(Date(receipt.purchase.issuedAtMillis))}")</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:TicketDetailViewModel$mutableState.value = TicketUiState.Content(TicketDetail(ticket, generator.generate(ticket.id)))</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:TicketsViewModel$is TicketResult.Success -&gt; if (result.value.isEmpty()) TicketUiState.Empty else TicketUiState.Content(result.value)</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:viewModel: ReceiptViewModel = koinViewModel(key = "receipt:$userId:$reference", parameters = { parametersOf(userId, reference) })</ID>
+    <ID>MaxLineLength:TicketsScreen.kt:viewModel: TicketDetailViewModel = koinViewModel(key = "ticket:$userId:$id", parameters = { parametersOf(userId, id) })</ID>
+    <ID>NewLineAtEndOfFile:ExampleInstrumentedTest.kt:com.innaval.ingresosnamao.ExampleInstrumentedTest.kt</ID>
+    <ID>NewLineAtEndOfFile:ExampleUnitTest.kt:com.innaval.ingresosnamao.ExampleUnitTest.kt</ID>
+    <ID>ReturnCount:AuthViewModel.kt:AuthViewModel$fun submitProfile</ID>
+    <ID>ReturnCount:LoginScreen.kt:private suspend fun googleToken: AuthResult&lt;String&gt;</ID>
+    <ID>ReturnCount:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$@Synchronized override fun acceptCallback</ID>
+    <ID>ReturnCount:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$@Synchronized override fun acknowledgeApproved: Boolean</ID>
+    <ID>ReturnCount:PaymentRepositoryImpl.kt:PaymentRepositoryImpl$@Synchronized override fun start: StartResult</ID>
+    <ID>SwallowedException:AuthRepositoryImpl.kt:cacheError: Exception</ID>
+    <ID>SwallowedException:Cart.kt:e: ArithmeticException</ID>
+    <ID>SwallowedException:EventRepositoryImpl.kt:EventRepositoryImpl$e: ArithmeticException</ID>
+    <ID>SwallowedException:EventRepositoryImpl.kt:EventRepositoryImpl$e: Exception</ID>
+    <ID>SwallowedException:EventRepositoryImpl.kt:EventRepositoryImpl$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:EventRepositoryImpl.kt:EventRepositoryImpl$e: IllegalStateException</ID>
+    <ID>SwallowedException:EventRepositoryImpl.kt:EventRepositoryImpl$e: SerializationException</ID>
+    <ID>SwallowedException:LoginScreen.kt:e: GetCredentialCancellationException</ID>
+    <ID>SwallowedException:LoginScreen.kt:e: GetCredentialException</ID>
+    <ID>SwallowedException:LoginScreen.kt:e: GoogleIdTokenParsingException</ID>
+    <ID>SwallowedException:RoomCartRepository.kt:RoomCartRepository$e: Exception</ID>
+    <ID>ThrowsCount:EventRepositoryImpl.kt:EventsJsonParser$fun parse: List&lt;Event&gt;</ID>
+    <ID>TooGenericExceptionCaught:AppResult.kt:e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AuthRepositoryImpl.kt:AuthRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AuthRepositoryImpl.kt:cacheError: Exception</ID>
+    <ID>TooGenericExceptionCaught:AuthRepositoryImpl.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:EventRepositoryImpl.kt:EventRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:RoomCartRepository.kt:RoomCartRepository$e: Exception</ID>
+    <ID>TooManyFunctions:AuthViewModel.kt:AuthViewModel : ViewModel</ID>
+    <ID>WildcardImport:AppModulesTest.kt:import com.innaval.ingresosnamao.feature.auth.domain.*</ID>
+    <ID>WildcardImport:AppModulesTest.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:AppModulesTest.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:AppModulesTest.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:AppModulesTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:AuthModule.kt:import com.innaval.ingresosnamao.feature.auth.domain.*</ID>
+    <ID>WildcardImport:AuthViewModel.kt:import com.innaval.ingresosnamao.feature.auth.domain.*</ID>
+    <ID>WildcardImport:AuthViewModelTest.kt:import com.innaval.ingresosnamao.feature.auth.domain.*</ID>
+    <ID>WildcardImport:CartModule.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:CartRoomTest.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:CartViewModel.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:CartViewModelTest.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:CieloGateway.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:CieloGateway.kt:import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:ExampleInstrumentedTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ExampleUnitTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:PaymentRepositoryImpl.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PaymentRepositoryImpl.kt:import kotlinx.serialization.json.*</ID>
+    <ID>WildcardImport:PaymentRepositoryTest.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PaymentRepositoryTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:PaymentRobotTest.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PaymentScreen.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:PaymentScreen.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PaymentViewModelTest.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PurchaseFlowRobotTest.kt:import com.innaval.ingresosnamao.feature.auth.domain.*</ID>
+    <ID>WildcardImport:PurchaseFlowRobotTest.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:PurchaseFlowRobotTest.kt:import com.innaval.ingresosnamao.feature.events.domain.*</ID>
+    <ID>WildcardImport:PurchaseFlowRobotTest.kt:import com.innaval.ingresosnamao.feature.payment.domain.*</ID>
+    <ID>WildcardImport:PurchaseFlowRobotTest.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:RoomCartRepository.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:RoomCartRepositoryTest.kt:import com.innaval.ingresosnamao.feature.cart.domain.*</ID>
+    <ID>WildcardImport:SimulatedPurchaseTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:TicketModule.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:TicketModule.kt:import com.innaval.ingresosnamao.feature.ticket.presentation.*</ID>
+    <ID>WildcardImport:TicketRepositoryImpl.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:TicketRobotTest.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:TicketRoomTest.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:TicketRoomTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:TicketViewModelTest.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+    <ID>WildcardImport:TicketsScreen.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:TicketsScreen.kt:import com.innaval.ingresosnamao.feature.ticket.domain.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

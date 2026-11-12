@@ -1,0 +1,4 @@
+<resources>
+    <string name="ingressos_loading">Carregando</string>
+    <string name="ingressos_retry">Tentar novamente</string>
+</resources>

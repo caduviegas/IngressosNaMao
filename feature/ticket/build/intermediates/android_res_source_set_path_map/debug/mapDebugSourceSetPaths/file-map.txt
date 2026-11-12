@@ -1,0 +1,9 @@
+com.innaval.ingresosnamao.feature.ticket-pngs-0 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/generated/res/pngs/debug
+com.innaval.ingresosnamao.feature.ticket-updated_navigation_xml-1 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/generated/updated_navigation_xml/debug
+com.innaval.ingresosnamao.feature.ticket-mergeDebugResources-2 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.innaval.ingresosnamao.feature.ticket-mergeDebugResources-3 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.innaval.ingresosnamao.feature.ticket-debug-4 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/intermediates/merged_res/debug/mergeDebugResources
+com.innaval.ingresosnamao.feature.ticket-debug-5 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/build/intermediates/packaged_res/debug/packageDebugResources
+com.innaval.ingresosnamao.feature.ticket-debug-6 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/src/debug/res
+com.innaval.ingresosnamao.feature.ticket-main-7 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/ticket/src/main/res
+gradleHome-0 /Users/eduardoviegas/.gradle

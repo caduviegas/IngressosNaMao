@@ -1,0 +1,9 @@
+com.innaval.ingresosnamao.feature.payment-pngs-0 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/generated/res/pngs/debug
+com.innaval.ingresosnamao.feature.payment-updated_navigation_xml-1 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/generated/updated_navigation_xml/debug
+com.innaval.ingresosnamao.feature.payment-mergeDebugResources-2 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.innaval.ingresosnamao.feature.payment-mergeDebugResources-3 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.innaval.ingresosnamao.feature.payment-debug-4 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/intermediates/merged_res/debug/mergeDebugResources
+com.innaval.ingresosnamao.feature.payment-debug-5 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/build/intermediates/packaged_res/debug/packageDebugResources
+com.innaval.ingresosnamao.feature.payment-debug-6 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/debug/res
+com.innaval.ingresosnamao.feature.payment-main-7 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/payment/src/main/res
+gradleHome-0 /Users/eduardoviegas/.gradle

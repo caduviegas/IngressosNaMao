@@ -1,0 +1,9 @@
+com.innaval.ingresosnamao.feature.cart-pngs-0 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/generated/res/pngs/debug
+com.innaval.ingresosnamao.feature.cart-updated_navigation_xml-1 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/generated/updated_navigation_xml/debug
+com.innaval.ingresosnamao.feature.cart-mergeDebugResources-2 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+com.innaval.ingresosnamao.feature.cart-mergeDebugResources-3 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+com.innaval.ingresosnamao.feature.cart-debug-4 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/intermediates/merged_res/debug/mergeDebugResources
+com.innaval.ingresosnamao.feature.cart-debug-5 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/build/intermediates/packaged_res/debug/packageDebugResources
+com.innaval.ingresosnamao.feature.cart-debug-6 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/src/debug/res
+com.innaval.ingresosnamao.feature.cart-main-7 /Users/eduardoviegas/AndroidStudioProjects/IngresosNaMao/feature/cart/src/main/res
+gradleHome-0 /Users/eduardoviegas/.gradle

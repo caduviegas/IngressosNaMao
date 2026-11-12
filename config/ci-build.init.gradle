@@ -1,0 +1,4 @@
+gradle.beforeProject { project ->
+    def relativePath = project.path == ":" ? "root" : project.path.substring(1).replace(':', '/')
+    project.layout.buildDirectory.set(new File(project.rootProject.projectDir, "build/quality/${relativePath}"))
+}
