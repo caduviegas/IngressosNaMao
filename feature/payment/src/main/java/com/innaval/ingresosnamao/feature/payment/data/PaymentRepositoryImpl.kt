@@ -48,11 +48,11 @@ internal class PaymentRepositoryImpl(
 
     @Synchronized
     override fun start(order: PaymentOrder, credentials: TestCredentials): StartResult {
-        if (!enabled) return StartResult.Failure("Pagamento Cielo disponível somente em debug.")
+        if (!enabled) return StartResult.Failure("Pagamento Cielo indisponível nesta versão.")
         if (state.value != PaymentState.Ready) return StartResult.Failure("Existe uma tentativa anterior que exige conciliação.")
         if (!validOrder(order)) return StartResult.Failure("Carrinho ou total inválido.")
         if (credentials.clientId.isBlank() || credentials.accessToken.isBlank()) {
-            return StartResult.Failure("Informe as credenciais de teste da Cielo.")
+            return StartResult.Failure("Credenciais da Cielo não configuradas.")
         }
         val attempt = PaymentAttempt(UUID.randomUUID().toString(), order, System.currentTimeMillis(), AttemptStatus.WAITING)
         if (!save(attempt)) return StartResult.Failure("Falha ao salvar a tentativa; pagamento não iniciado.")
@@ -132,7 +132,7 @@ internal class PaymentRepositoryImpl(
             attempt.order.fingerprint != fingerprint
         ) return false
         if (!preferences.edit().remove("attempt").commit()) {
-            mutableState.value = PaymentState.StorageError("Falha ao concluir a tentativa de teste.")
+            mutableState.value = PaymentState.StorageError("Falha ao concluir a tentativa de pagamento.")
             return false
         }
         mutableState.value = PaymentState.Ready
@@ -142,14 +142,14 @@ internal class PaymentRepositoryImpl(
     @Synchronized
     override fun discardSimulation(expectedState: PaymentState): DiscardSimulationResult {
         return when {
-            !enabled -> DiscardSimulationResult.Failure("Recuperação disponível somente em debug.")
+            !enabled -> DiscardSimulationResult.Failure("Recuperação indisponível nesta versão.")
             expectedState == PaymentState.Ready || state.value != expectedState ->
                 DiscardSimulationResult.Failure("A tentativa mudou ou não pode ser descartada. Atualize a tela.")
             !preferences.edit().remove("attempt").commit() -> {
                 mutableState.value = PaymentState.StorageError(
                     "Falha ao remover tentativa; não realize outro pagamento."
                 )
-                DiscardSimulationResult.Failure("Não foi possível remover a tentativa de teste.")
+                DiscardSimulationResult.Failure("Não foi possível remover a tentativa.")
             }
             else -> {
                 mutableState.value = PaymentState.Ready

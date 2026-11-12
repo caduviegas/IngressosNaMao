@@ -1,5 +1,7 @@
 package com.innaval.ingresosnamao.feature.payment.presentation
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -20,11 +22,11 @@ import org.robolectric.annotation.Config
 
 private class PaymentRobot(private val compose: ComposeTestRule) {
     fun assertUnknownBlocksContinuing() {
-        compose.onNodeWithText("Resultado desconhecido nesta simulação.").assertExists()
+        compose.onNodeWithText("Resultado desconhecido.").assertExists()
         compose.onNodeWithText("Continuar").assertDoesNotExist()
     }
     fun continueApproved() {
-        compose.onNodeWithText("Pagamento de teste aprovado. Este resultado não é válido para produção.").assertExists()
+        compose.onNodeWithText("Retorno do pagamento recebido.").assertExists()
         compose.onNodeWithText("Continuar").performClick()
     }
 }
@@ -33,6 +35,33 @@ private class PaymentRobot(private val compose: ComposeTestRule) {
 @Config(sdk = [28])
 class PaymentRobotTest {
     @get:Rule val compose = createComposeRule()
+    private val credentials = TestCredentials("client", "token")
+
+    @Test fun startsAutomaticallyWithoutCredentialFieldsOrDuplicateOnRecomposition() {
+        val order = PaymentOrder("alice", "fingerprint", listOf(PaymentItem("event", "Show", 1, 100)), 100)
+        val repository = mockk<PaymentRepository>()
+        val state = MutableStateFlow<PaymentState>(PaymentState.Ready)
+        every { repository.state } returns state
+        every { repository.expire() } returns Unit
+        every { repository.start(order, credentials) } answers {
+            state.value = PaymentState.Active(PaymentAttempt("reference", order, 1, AttemptStatus.WAITING))
+            StartResult.Started
+        }
+        val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
+        val refresh = mutableStateOf(0)
+        compose.setContent {
+            IngressosTheme {
+                Text("Atualização ${refresh.value}")
+                PaymentRoute(order, true, credentials, {}, {}, viewModel, validate = { null })
+            }
+        }
+        compose.onNodeWithText("Aguardando retorno da Cielo.").assertExists()
+        compose.onNodeWithText("Client ID de teste").assertDoesNotExist()
+        compose.onNodeWithText("Access token de teste").assertDoesNotExist()
+        compose.runOnIdle { refresh.value++ }
+        compose.waitForIdle()
+        verify(exactly = 1) { repository.start(order, credentials) }
+    }
 
     @Test fun unknownAttemptBlocksContinuationUntilApproved() {
         val order = PaymentOrder("alice", "fingerprint", listOf(PaymentItem("event", "Show", 1, 100)), 100)
@@ -44,7 +73,9 @@ class PaymentRobotTest {
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
         var continued = 0
         compose.setContent {
-            IngressosTheme { PaymentRoute(order, true, { continued++ }, {}, viewModel, validate = { null }) }
+            IngressosTheme {
+                PaymentRoute(order, true, credentials, { continued++ }, {}, viewModel, validate = { null })
+            }
         }
         val robot = PaymentRobot(compose)
         robot.assertUnknownBlocksContinuing()
@@ -61,12 +92,14 @@ class PaymentRobotTest {
         every { repository.state } returns state
         every { repository.expire() } returns Unit
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
-        compose.setContent { IngressosTheme { PaymentRoute(order, true, {}, {}, viewModel, validate = { null }) } }
-        compose.onNodeWithText("Aguardando retorno do emulador.").assertExists()
+        compose.setContent {
+            IngressosTheme { PaymentRoute(order, true, credentials, {}, {}, viewModel, validate = { null }) }
+        }
+        compose.onNodeWithText("Aguardando retorno da Cielo.").assertExists()
         compose.runOnIdle { state.value = PaymentState.Active(attempt.copy(status = AttemptStatus.CANCELLED)) }
-        compose.onNodeWithText("Simulação cancelada.").assertExists()
+        compose.onNodeWithText("Pagamento cancelado.").assertExists()
         compose.runOnIdle { state.value = PaymentState.Active(attempt.copy(status = AttemptStatus.ERROR)) }
-        compose.onNodeWithText("A simulação retornou um erro.").assertExists()
+        compose.onNodeWithText("O pagamento retornou um erro.").assertExists()
         compose.runOnIdle {
             state.value = PaymentState.Active(attempt.copy(order = order.copy(userId = "other")))
         }
@@ -88,19 +121,21 @@ class PaymentRobotTest {
             DiscardSimulationResult.Discarded
         }
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
-        compose.setContent { IngressosTheme { PaymentRoute(order, true, {}, {}, viewModel, validate = { null }) } }
+        compose.setContent {
+            IngressosTheme { PaymentRoute(order, true, credentials, {}, {}, viewModel, validate = { null }) }
+        }
         compose.onNodeWithText("Há outra tentativa neste dispositivo. Resolva-a antes de iniciar outro pagamento.")
             .assertExists()
-        compose.onNodeWithText("Cielo: erro de autenticação (código 4). Verifique as credenciais de teste.")
+        compose.onNodeWithText("Cielo: erro de autenticação (código 4). Verifique as credenciais configuradas.")
             .assertExists()
-        compose.onNodeWithText("Descartar tentativa de teste").performClick()
+        compose.onNodeWithText("Descartar tentativa").performClick()
         verify(exactly = 0) { repository.discardSimulation(any()) }
         compose.onNodeWithText("Não descartar").performClick()
         verify(exactly = 0) { repository.discardSimulation(any()) }
-        compose.onNodeWithText("Descartar tentativa de teste").performClick()
+        compose.onNodeWithText("Descartar tentativa").performClick()
         compose.onNodeWithText("Descartar").performClick()
         verify(exactly = 1) { repository.discardSimulation(PaymentState.Active(attempt)) }
-        compose.onNodeWithText("Abrir emulador").assertExists()
+        compose.onNodeWithText("Tentar novamente").assertExists()
     }
 
     @Test fun discardIsAvailableForAllStatesAndAnotherUser() {
@@ -111,20 +146,22 @@ class PaymentRobotTest {
         every { repository.state } returns state
         every { repository.expire() } returns Unit
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
-        compose.setContent { IngressosTheme { PaymentRoute(order, true, {}, {}, viewModel, validate = { null }) } }
-        compose.onNodeWithText("Descartar tentativa de teste").assertExists()
+        compose.setContent {
+            IngressosTheme { PaymentRoute(order, true, credentials, {}, {}, viewModel, validate = { null }) }
+        }
+        compose.onNodeWithText("Descartar tentativa").assertExists()
         compose.runOnIdle { state.value = PaymentState.Active(attempt.copy(status = AttemptStatus.UNKNOWN)) }
-        compose.onNodeWithText("Descartar tentativa de teste").assertExists()
+        compose.onNodeWithText("Descartar tentativa").assertExists()
         compose.runOnIdle { state.value = PaymentState.Active(attempt.copy(status = AttemptStatus.APPROVED)) }
-        compose.onNodeWithText("Descartar tentativa de teste").assertExists()
+        compose.onNodeWithText("Descartar tentativa").assertExists()
         compose.runOnIdle {
             state.value = PaymentState.Active(
                 attempt.copy(status = AttemptStatus.ERROR, order = order.copy(userId = "other"))
             )
         }
-        compose.onNodeWithText("Descartar tentativa de teste").assertExists()
+        compose.onNodeWithText("Descartar tentativa").assertExists()
         compose.runOnIdle { state.value = PaymentState.StorageError("Falha ao restaurar") }
-        compose.onNodeWithText("Descartar tentativa de teste").assertExists()
+        compose.onNodeWithText("Descartar tentativa").assertExists()
     }
 
     @Test fun recoveryActionCanClearStorageErrorWithoutCart() {
@@ -142,10 +179,10 @@ class PaymentRobotTest {
             val current = state.collectAsStateWithLifecycle()
             IngressosTheme { SimulationRecoveryAction(current.value, viewModel) }
         }
-        compose.onNodeWithText("Descartar tentativa de teste").performClick()
+        compose.onNodeWithText("Descartar tentativa").performClick()
         compose.onNodeWithText("Descartar").performClick()
         verify(exactly = 1) { repository.discardSimulation(initial) }
-        compose.onNodeWithText("Descartar tentativa de teste").assertDoesNotExist()
+        compose.onNodeWithText("Descartar tentativa").assertDoesNotExist()
     }
 
     @Test fun recoveryIsUnavailableInDisabledPaymentScreen() {
@@ -157,7 +194,10 @@ class PaymentRobotTest {
         every { repository.state } returns state
         every { repository.expire() } returns Unit
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
-        compose.setContent { IngressosTheme { PaymentRoute(order, false, {}, {}, viewModel, validate = { null }) } }
-        compose.onNodeWithText("Descartar tentativa de teste").assertDoesNotExist()
+        compose.setContent {
+            IngressosTheme { PaymentRoute(order, false, credentials, {}, {}, viewModel, validate = { null }) }
+        }
+        compose.onNodeWithText("Descartar tentativa").assertDoesNotExist()
+        verify(exactly = 0) { repository.start(any(), any()) }
     }
 }

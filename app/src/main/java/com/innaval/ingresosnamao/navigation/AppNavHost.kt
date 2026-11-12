@@ -38,6 +38,7 @@ import com.innaval.ingresosnamao.feature.payment.domain.PaymentItem
 import com.innaval.ingresosnamao.feature.payment.domain.PaymentOrder
 import com.innaval.ingresosnamao.feature.payment.domain.PaymentRepository
 import com.innaval.ingresosnamao.feature.payment.domain.PaymentState
+import com.innaval.ingresosnamao.feature.payment.domain.TestCredentials
 import com.innaval.ingresosnamao.feature.payment.domain.AttemptStatus
 import com.innaval.ingresosnamao.core.ui.components.ErrorState
 import com.innaval.ingresosnamao.core.ui.components.LoadingState
@@ -100,7 +101,7 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                 val attempt = (paymentState as? PaymentState.Active)?.attempt
                 if (BuildConfig.DEBUG && attempt?.status == AttemptStatus.APPROVED && attempt.order.userId == userId) {
                     TextButton(onClick = { nav.navigate(Routes.cleanup(userId, attempt.order.fingerprint)) }) {
-                        Text("Concluir pagamento de teste pendente")
+                        Text("Concluir pagamento pendente")
                     }
                 }
                 if (BuildConfig.DEBUG && paymentState != PaymentState.Ready) {
@@ -183,6 +184,7 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                                 PaymentItem(it.eventId, it.eventName, it.quantity, it.unitPriceCents)
                             }, cart.totalCents),
                             enabled = BuildConfig.DEBUG,
+                            credentials = TestCredentials(BuildConfig.CIELO_CLIENT_ID, BuildConfig.CIELO_ACCESS_TOKEN),
                             onPaid = { nav.navigate(Routes.cleanup(userId, fingerprint)) { popUpTo(Routes.PAYMENT) { inclusive = true } } },
                             onBack = { nav.popBackStack() },
                             validate = {
@@ -227,13 +229,16 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                     modifier = Modifier.padding(IngressosTheme.spacing.md),
                     verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
                 ) {
-                    Text("Falha ao salvar o estado do pagamento. Os ingressos de teste já emitidos podem ser consultados; não pague novamente.")
+                    Text(
+                        "Falha ao salvar o estado do pagamento. Os ingressos já emitidos podem ser consultados; " +
+                            "não pague novamente."
+                    )
                     TextButton(onClick = { nav.navigate(Routes.tickets(userId)) { popUpTo(Routes.EVENTS) } }) {
                         Text("Ver ingressos")
                     }
                 }
             } else if (purchase == null) {
-                ErrorState("Não há aprovação de teste para este carrinho.", { nav.popBackStack() }, retryLabel = "Voltar")
+                ErrorState("Não há aprovação para este carrinho.", { nav.popBackStack() }, retryLabel = "Voltar")
             } else {
                 val reference = purchase.reference
                 LaunchedEffect(reference, issueRetry) {
@@ -244,7 +249,7 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                     }
                 }
                 if (acknowledgementError) {
-                    ErrorState("Não foi possível concluir o registro do pagamento de teste.", {
+                    ErrorState("Não foi possível concluir o registro do pagamento.", {
                         acknowledgementError = !payments.acknowledgeApproved(userId, fingerprint)
                         if (!acknowledgementError) nav.navigate(Routes.receipt(userId, reference)) { popUpTo(Routes.EVENTS) }
                     })
@@ -254,7 +259,7 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                         when (result.error) {
                             TicketError.INVALID_PURCHASE -> "Dados da compra inválidos ou limite de 100 ingressos excedido; não pague novamente."
                             TicketError.CONFLICT -> "Os dados da compra conflitam com uma emissão existente; não pague novamente."
-                            TicketError.STORAGE -> "Falha ao salvar os ingressos de teste. Tente novamente sem pagar outra vez."
+                            TicketError.STORAGE -> "Falha ao salvar os ingressos. Tente novamente sem pagar outra vez."
                         },
                         { issueRetry++ },
                     )

@@ -55,6 +55,39 @@ class PaymentViewModelTest {
         verify(exactly = 0) { repository.start(any(), any()) }
     }
 
+    @Test fun automaticStartRunsOnceAndValidationFailureRequiresManualRetry() {
+        val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
+        val credentials = TestCredentials("client", "token")
+        val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
+        every { repository.start(order, credentials) } returns StartResult.Started
+
+        viewModel.startAutomatically(order, credentials) { "Quantidade indisponível" }
+        dispatcher.scheduler.runCurrent()
+        assertEquals("Quantidade indisponível", viewModel.error.value)
+        viewModel.startAutomatically(order, credentials) { null }
+        dispatcher.scheduler.runCurrent()
+        verify(exactly = 0) { repository.start(any(), any()) }
+
+        viewModel.submitValidated(order, credentials) { null }
+        dispatcher.scheduler.runCurrent()
+        verify(exactly = 1) { repository.start(order, credentials) }
+    }
+
+    @Test fun existingAttemptIsNotAutomaticallyRestartedAfterDiscard() {
+        val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
+        val state = MutableStateFlow<PaymentState>(
+            PaymentState.Active(PaymentAttempt("ref", order, 1, AttemptStatus.UNKNOWN))
+        )
+        every { repository.state } returns state
+        val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
+        val credentials = TestCredentials("client", "token")
+        viewModel.startAutomatically(order, credentials) { null }
+        state.value = PaymentState.Ready
+        viewModel.startAutomatically(order, credentials) { null }
+        dispatcher.scheduler.runCurrent()
+        verify(exactly = 0) { repository.start(any(), any()) }
+    }
+
     @Test fun discardFailureIsDisplayed() {
         val state = PaymentState.StorageError("Falha")
         every { repository.discardSimulation(state) } returns

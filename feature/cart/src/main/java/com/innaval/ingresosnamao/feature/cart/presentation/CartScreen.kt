@@ -59,11 +59,14 @@ fun CartCleanupRoute(
                     Modifier.padding(IngressosTheme.spacing.md),
                     verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
                 ) {
-                    Text("Pagamento confirmado. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
+                    Text("Retorno recebido. O carrinho mudou e não foi apagado; revise os itens antes de outra compra.")
                     IngressosButton("Continuar", onComplete)
                 }
             } else {
-                ErrorState("Pagamento confirmado, mas não foi possível limpar o carrinho. Tente novamente.", viewModel::retry)
+                ErrorState(
+                    "Retorno recebido, mas não foi possível limpar o carrinho. Tente novamente.",
+                    viewModel::retry,
+                )
             }
         }
     }

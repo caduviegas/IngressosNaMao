@@ -26,7 +26,7 @@ private class TicketRobot(private val compose: ComposeTestRule) {
         compose.onNodeWithText("Tentar novamente").performClick()
     }
     fun openTicket() {
-        compose.onNodeWithText("Simulação — não comprova pagamento real.").assertExists()
+        compose.onNodeWithText("Este resumo não comprova pagamento.").assertExists()
         compose.onNodeWithText("Ingressos: 1").assertExists()
         compose.onNode(hasText("Show", substring = true) and hasClickAction()).performClick()
     }
@@ -69,9 +69,9 @@ class TicketRobotTest {
         compose.setContent {
             IngressosTheme { TicketDetailRoute("alice", "ticket-id", {}, viewModel) }
         }
-        compose.onNodeWithText("Simulação — sem validade de entrada.").assertExists()
+        compose.onNodeWithText("Ingresso sem validade de entrada.").assertExists()
         compose.onNodeWithText("Não foi possível gerar o QR Code.").assertExists()
         compose.onNodeWithText("Tentar novamente").performClick()
-        compose.onNodeWithContentDescription("QR Code do ingresso de teste").assertExists()
+        compose.onNodeWithContentDescription("QR Code do ingresso").assertExists()
     }
 }

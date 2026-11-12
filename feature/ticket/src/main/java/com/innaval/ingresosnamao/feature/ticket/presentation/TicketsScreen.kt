@@ -130,11 +130,10 @@ fun TicketsRoute(
         Modifier.padding(IngressosTheme.spacing.md),
         verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
     ) {
-        Text("Meus ingressos de teste", style = MaterialTheme.typography.headlineSmall)
-        Text("Simulação — sem validade de entrada.")
+        Text("Meus ingressos", style = MaterialTheme.typography.headlineSmall)
         when (val current = state) {
             TicketUiState.Loading -> Text("Carregando compras…")
-            TicketUiState.Empty -> Text("Nenhuma compra de teste encontrada.")
+            TicketUiState.Empty -> Text("Nenhuma compra encontrada.")
             TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar as compras.", viewModel::retry)
             is TicketUiState.Content -> LazyColumn(
                 Modifier.weight(1f, fill = false),
@@ -164,8 +163,8 @@ fun ReceiptRoute(
         Modifier.padding(IngressosTheme.spacing.md),
         verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
     ) {
-        Text("Comprovante de teste", style = MaterialTheme.typography.headlineSmall)
-        Text("Simulação — não comprova pagamento real.")
+        Text("Resumo do pedido", style = MaterialTheme.typography.headlineSmall)
+        Text("Este resumo não comprova pagamento.")
         when (val current = state) {
             TicketUiState.Loading -> Text("Carregando comprovante…")
             TicketUiState.Empty -> Text("Compra não encontrada.")
@@ -216,7 +215,7 @@ fun TicketDetailRoute(
         verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
     ) {
         Text("Detalhes do ingresso", style = MaterialTheme.typography.headlineSmall)
-        Text("Simulação — sem validade de entrada.")
+        Text("Ingresso sem validade de entrada.")
         when (val current = state) {
             TicketUiState.Loading -> Text("Carregando ingresso…")
             TicketUiState.Empty -> Text("Ingresso não encontrado.")
@@ -234,7 +233,7 @@ fun TicketDetailRoute(
                             Bitmap.createBitmap(qr.pattern.pixels, qr.pattern.size, qr.pattern.size, Bitmap.Config.ARGB_8888).asImageBitmap()
                         }
 
-                        Image(bitmap, contentDescription = "QR Code do ingresso de teste", modifier = Modifier.size(256.dp))
+                        Image(bitmap, contentDescription = "QR Code do ingresso", modifier = Modifier.size(256.dp))
                     }
                 }
             }

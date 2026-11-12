@@ -48,6 +48,16 @@ class PaymentRepositoryTest {
         assertFalse(context.getSharedPreferences("payment_attempt", Context.MODE_PRIVATE).all.toString().contains("test-token"))
     }
 
+    @Test fun missingCredentialsAreReportedWithoutStartingPayment() {
+        val repo = PaymentRepositoryImpl(context, gateway)
+        assertEquals(
+            StartResult.Failure("Credenciais da Cielo não configuradas."),
+            repo.start(order, TestCredentials("", "")),
+        )
+        assertEquals(PaymentState.Ready, repo.state.value)
+        verify(exactly = 0) { gateway.launch(any(), any()) }
+    }
+
     @Test fun onlyMatchingCompletePaymentApproves() {
         val repo = PaymentRepositoryImpl(context, gateway)
         repo.start(order, credentials)
