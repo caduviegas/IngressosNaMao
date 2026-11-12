@@ -1,0 +1,48 @@
+name: Qualidade
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Análise, testes e cobertura
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Obter código
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Configurar Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          cmdline-tools-version: '16111833'
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
+      - name: Executar verificações
+        run: ./gradlew --no-daemon --continue --init-script config/ci-build.init.gradle :qualityCheck
+
+      - name: Publicar relatórios
+        if: ${{ always() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: relatorios-qualidade
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            build/quality/root/reports/detekt/
+            build/quality/root/reports/jacoco/
+            build/quality/**/test-results/testDebugUnitTest/
+            build/quality/**/reports/tests/testDebugUnitTest/

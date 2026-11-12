@@ -5,6 +5,7 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     jacoco
+    alias(libs.plugins.detekt)
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.compose) apply false
@@ -21,6 +22,14 @@ val coverageModules = listOf(
     ":app", ":core:common", ":core:ui", ":core:network", ":core:database",
     ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket",
 )
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("config/detekt/detekt.yml"))
+    baseline = file("config/detekt/baseline.xml")
+    source.setFrom(coverageModules.map { project(it).file("src") })
+    ignoreFailures = false
+}
 val generatedClasses = listOf(
     "**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/Manifest.class",
     "**/Manifest\$*.class", "**/AppDatabase_Impl*.class", "**/CartDao_Impl*.class",
@@ -115,7 +124,7 @@ tasks.register<JacocoReport>("jacocoDebugReport") {
 tasks.register<JacocoCoverageVerification>("jacocoDebugCoverageVerification") {
     group = "verification"
     description = "Verifies at least 80% aggregated debug line coverage."
-    dependsOn(verifyCoverageInputs)
+    dependsOn("jacocoDebugReport")
     classDirectories.setFrom(allCoverageClasses)
     sourceDirectories.setFrom(allCoverageSources)
     executionData.setFrom(allCoverageData)
@@ -126,6 +135,13 @@ tasks.register<JacocoCoverageVerification>("jacocoDebugCoverageVerification") {
                 value = "COVEREDRATIO"
                 minimum = "0.80".toBigDecimal()
             }
+
         }
     }
+}
+
+tasks.register("qualityCheck") {
+    group = "verification"
+    description = "Runs static analysis, tests, coverage verification and the debug build."
+    dependsOn("detekt", "jacocoDebugCoverageVerification", ":app:assembleDebug")
 }

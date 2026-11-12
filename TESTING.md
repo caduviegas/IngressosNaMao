@@ -72,3 +72,5 @@ Os relatórios executam os testes JVM de todos os módulos antes da medição, i
 individuais, pois um módulo pode ser exercitado por testes de outro. Como a cobertura é baseada na
 JVM, ela não incorpora automaticamente a execução de `connectedDebugAndroidTest`; resultados
 desses testes devem ser acompanhados separadamente.
+
+O processo de análise estática e automação está descrito em [QUALITY.md](QUALITY.md).
