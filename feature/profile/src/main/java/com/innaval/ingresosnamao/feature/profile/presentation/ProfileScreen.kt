@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosBackScreen
 import com.innaval.ingresosnamao.core.ui.components.IngressosButtonStyle
 import com.innaval.ingresosnamao.core.ui.components.IngressosProgressIndicator
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
@@ -47,30 +48,30 @@ fun ProfileScreen(
     onConfirmLogout: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.md),
-    ) {
-        Text("Meu perfil", style = MaterialTheme.typography.headlineSmall)
-        if (state.loading || state.loggingOut) {
-            IngressosProgressIndicator(label = if (state.loggingOut) "Encerrando sessão" else "Carregando perfil")
-            Text(if (state.loggingOut) "Encerrando sessão…" else "Carregando perfil…")
-        }
-        state.profile?.let { profile ->
-            if (profile.fromCache) Text("Dados salvos no dispositivo; podem estar desatualizados.")
-            ProfileField("Nome", profile.name)
-            ProfileField("E-mail", profile.email)
-            ProfileField("Endereço", profile.address)
-        }
-        state.error?.let { error ->
-            Text(profileErrorMessage(error), color = MaterialTheme.colorScheme.error)
-            if (state.profile == null) IngressosButton("Tentar novamente", onRetry)
-        }
-        if (!state.loading && !state.loggingOut && !state.signedOut) {
-            if (state.identity != null) {
-                IngressosButton("Sair da conta", onLogout, style = IngressosButtonStyle.Outlined)
+    IngressosBackScreen("Meu perfil", onBack, backEnabled = state.canNavigateBack()) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.md),
+        ) {
+            if (state.loading || state.loggingOut) {
+                IngressosProgressIndicator(label = if (state.loggingOut) "Encerrando sessão" else "Carregando perfil")
+                Text(if (state.loggingOut) "Encerrando sessão…" else "Carregando perfil…")
             }
-            TextButton(onClick = onBack) { Text("Voltar") }
+            state.profile?.let { profile ->
+                if (profile.fromCache) Text("Dados salvos no dispositivo; podem estar desatualizados.")
+                ProfileField("Nome", profile.name)
+                ProfileField("E-mail", profile.email)
+                ProfileField("Endereço", profile.address)
+            }
+            state.error?.let { error ->
+                Text(profileErrorMessage(error), color = MaterialTheme.colorScheme.error)
+                if (state.profile == null) IngressosButton("Tentar novamente", onRetry)
+            }
+            if (state.canNavigateBack()) {
+                if (state.identity != null) {
+                    IngressosButton("Sair da conta", onLogout, style = IngressosButtonStyle.Outlined)
+                }
+            }
         }
     }
     if (state.confirmingLogout) {
@@ -83,6 +84,8 @@ fun ProfileScreen(
         )
     }
 }
+
+private fun ProfileUiState.canNavigateBack() = !loading && !loggingOut && !signedOut
 
 @Composable
 private fun ProfileField(label: String, value: String?) {

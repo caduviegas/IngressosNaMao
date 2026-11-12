@@ -101,6 +101,7 @@ class PurchaseFlowRobotTest {
         val robot = PurchaseFlowRobot(compose)
         robot.action.selectEvent()
         robot.action.checkout()
+        robot.result.navigationHidden()
         robot.action.continueApproved()
         robot.result.receiptShown()
         robot.action.openTicket()

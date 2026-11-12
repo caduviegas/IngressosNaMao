@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -22,6 +23,20 @@ import org.robolectric.annotation.Config
 class PaymentRobotTest {
     @get:Rule val compose = createComposeRule()
     private val credentials = TestCredentials("client", "token")
+
+    @Test fun givenPaymentValidationWhenInProgressThenBackIsDisabled() {
+        val order = PaymentOrder("alice", "fp", listOf(PaymentItem("event", "Show", 1, 100)), 100)
+        val repository = mockk<PaymentRepository>()
+        every { repository.state } returns MutableStateFlow(PaymentState.Ready)
+        every { repository.expire() } returns Unit
+        val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
+        val pending = CompletableDeferred<String?>()
+        compose.setContent {
+            IngressosTheme { PaymentRoute(order, true, credentials, {}, {}, viewModel, validate = { pending.await() }) }
+        }
+        PaymentRobot(compose).result.backDisabled()
+        compose.runOnIdle { pending.complete("Não foi possível validar o carrinho.") }
+    }
 
     @Test fun givenReadyPaymentWhenDisplayedThenStartsOnceWithoutCredentialFields() {
         val order = PaymentOrder("alice", "fingerprint", listOf(PaymentItem("event", "Show", 1, 100)), 100)

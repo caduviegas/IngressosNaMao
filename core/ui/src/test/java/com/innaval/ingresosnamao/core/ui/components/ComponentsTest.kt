@@ -120,6 +120,26 @@ class ComponentsTest {
         compose.runOnIdle { assertEquals(4, clicks) }
     }
 
+    @Test fun givenBackBarWhenClickedThenNavigatesAndRespectsDisabledState() {
+        var enabled by mutableStateOf(true)
+        var backs = 0
+        compose.setContent {
+            IngressosTheme {
+                IngressosBackScreen("Detalhes", { backs++ }, backEnabled = enabled) {
+                    androidx.compose.material3.Text("Conteúdo")
+                }
+            }
+        }
+        val back = compose.onNodeWithContentDescription("Voltar")
+        back.assertIsEnabled().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp).performClick()
+        val title = compose.onNodeWithText("Detalhes").fetchSemanticsNode().boundsInRoot
+        val content = compose.onNodeWithText("Conteúdo").fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue(title.bottom <= content.top)
+        compose.runOnIdle { enabled = false }
+        back.assertIsNotEnabled().performTouchInput { click() }
+        compose.runOnIdle { assertEquals(1, backs) }
+    }
+
     @Test fun givenBothThemesWhenHeaderDisplayedThenShowsNameAboveContent() {
         var dark by mutableStateOf(false)
         compose.setContent {

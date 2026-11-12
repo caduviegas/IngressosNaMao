@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
+import com.innaval.ingresosnamao.core.ui.components.IngressosBackScreen
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.ticket.domain.*
 import kotlinx.coroutines.Job
@@ -126,27 +127,27 @@ fun TicketsRoute(
     viewModel: TicketsViewModel = koinViewModel(key = "tickets:$userId", parameters = { parametersOf(userId) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(
-        Modifier.padding(IngressosTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-    ) {
-        Text("Meus ingressos", style = MaterialTheme.typography.headlineSmall)
-        when (val current = state) {
-            TicketUiState.Loading -> Text("Carregando compras…")
-            TicketUiState.Empty -> Text("Nenhuma compra encontrada.")
-            TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar as compras.", viewModel::retry)
-            is TicketUiState.Content -> LazyColumn(
-                Modifier.weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-            ) {
-                items(current.value, key = { it.reference }) { purchase ->
-                    TextButton(onClick = { onReceipt(purchase.reference) }) {
-                        Text("Pedido ${purchase.orderId} — ${formatPriceBrl(purchase.totalCents)}")
+    IngressosBackScreen("Meus pedidos", onBack) {
+        Column(
+            Modifier.padding(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+        ) {
+            when (val current = state) {
+                TicketUiState.Loading -> Text("Carregando compras…")
+                TicketUiState.Empty -> Text("Nenhuma compra encontrada.")
+                TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar as compras.", viewModel::retry)
+                is TicketUiState.Content -> LazyColumn(
+                    Modifier.weight(1f, fill = false),
+                    verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+                ) {
+                    items(current.value, key = { it.reference }) { purchase ->
+                        TextButton(onClick = { onReceipt(purchase.reference) }) {
+                            Text("Pedido ${purchase.orderId} — ${formatPriceBrl(purchase.totalCents)}")
+                        }
                     }
                 }
             }
         }
-        TextButton(onClick = onBack) { Text("Voltar") }
     }
 }
 
@@ -159,46 +160,46 @@ fun ReceiptRoute(
     viewModel: ReceiptViewModel = koinViewModel(key = "receipt:$userId:$reference", parameters = { parametersOf(userId, reference) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(
-        Modifier.padding(IngressosTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-    ) {
-        Text("Resumo do pedido", style = MaterialTheme.typography.headlineSmall)
-        Text("Este resumo não comprova pagamento.")
-        when (val current = state) {
-            TicketUiState.Loading -> Text("Carregando comprovante…")
-            TicketUiState.Empty -> Text("Compra não encontrada.")
-            TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar o comprovante.", viewModel::retry)
-            is TicketUiState.Content -> {
-                val receipt = current.value
-                val quantities = receipt.tickets.groupingBy {
-                    Triple(it.eventId, it.eventName, it.unitPriceCents)
-                }.eachCount().toList()
-                LazyColumn(
-                    Modifier.weight(1f, fill = false),
-                    verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-                ) {
-                    item {
-                        Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
-                            Text("Pedido: ${receipt.purchase.orderId}")
-                            Text("Total: ${formatPriceBrl(receipt.purchase.totalCents)}")
-                            Text("Emitido: ${DateFormat.getDateTimeInstance().format(Date(receipt.purchase.issuedAtMillis))}")
-                            Text("Ingressos: ${receipt.tickets.size}")
+    IngressosBackScreen("Resumo do pedido", onBack) {
+        Column(
+            Modifier.padding(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+        ) {
+            Text("Este resumo não comprova pagamento.")
+            when (val current = state) {
+                TicketUiState.Loading -> Text("Carregando comprovante…")
+                TicketUiState.Empty -> Text("Compra não encontrada.")
+                TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar o comprovante.", viewModel::retry)
+                is TicketUiState.Content -> {
+                    val receipt = current.value
+                    val quantities = receipt.tickets.groupingBy {
+                        Triple(it.eventId, it.eventName, it.unitPriceCents)
+                    }.eachCount().toList()
+                    LazyColumn(
+                        Modifier.weight(1f, fill = false),
+                        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+                    ) {
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.xs)) {
+                                Text("Pedido: ${receipt.purchase.orderId}")
+                                Text("Total: ${formatPriceBrl(receipt.purchase.totalCents)}")
+                                Text("Emitido: ${DateFormat.getDateTimeInstance().format(Date(receipt.purchase.issuedAtMillis))}")
+                                Text("Ingressos: ${receipt.tickets.size}")
+                            }
                         }
-                    }
-                    items(quantities) { (item, quantity) ->
-                        Text("${item.second}: $quantity × ${formatPriceBrl(item.third)}")
-                    }
-                    item { Text("Abrir ingresso") }
-                    items(receipt.tickets, key = { it.id }) { ticket ->
-                        TextButton(onClick = { onTicket(ticket.id) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("${ticket.eventName} — ${formatPriceBrl(ticket.unitPriceCents)}")
+                        items(quantities) { (item, quantity) ->
+                            Text("${item.second}: $quantity × ${formatPriceBrl(item.third)}")
+                        }
+                        item { Text("Abrir ingresso") }
+                        items(receipt.tickets, key = { it.id }) { ticket ->
+                            TextButton(onClick = { onTicket(ticket.id) }, modifier = Modifier.fillMaxWidth()) {
+                                Text("${ticket.eventName} — ${formatPriceBrl(ticket.unitPriceCents)}")
+                            }
                         }
                     }
                 }
             }
         }
-        TextButton(onClick = onBack) { Text("Voltar") }
     }
 }
 
@@ -210,35 +211,35 @@ fun TicketDetailRoute(
     viewModel: TicketDetailViewModel = koinViewModel(key = "ticket:$userId:$id", parameters = { parametersOf(userId, id) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
-    ) {
-        Text("Detalhes do ingresso", style = MaterialTheme.typography.headlineSmall)
-        Text("Ingresso sem validade de entrada.")
-        when (val current = state) {
-            TicketUiState.Loading -> Text("Carregando ingresso…")
-            TicketUiState.Empty -> Text("Ingresso não encontrado.")
-            TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar o ingresso.", viewModel::retry)
-            is TicketUiState.Content -> {
-                val detail = current.value
-                Text(detail.ticket.eventName)
-                Text("Valor: ${formatPriceBrl(detail.ticket.unitPriceCents)}")
-                Text("ID: ${detail.ticket.id}")
-                when (val qr = detail.qr) {
-                    null -> Text("Gerando QR Code…")
-                    QrResult.Failure -> TicketErrorMessage("Não foi possível gerar o QR Code.", viewModel::retry)
-                    is QrResult.Success -> {
-                        val bitmap = remember(qr.pattern) {
-                            Bitmap.createBitmap(qr.pattern.pixels, qr.pattern.size, qr.pattern.size, Bitmap.Config.ARGB_8888).asImageBitmap()
-                        }
+    IngressosBackScreen("Detalhes do ingresso", onBack) {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm),
+        ) {
+            Text("Ingresso sem validade de entrada.")
+            when (val current = state) {
+                TicketUiState.Loading -> Text("Carregando ingresso…")
+                TicketUiState.Empty -> Text("Ingresso não encontrado.")
+                TicketUiState.Error -> TicketErrorMessage("Não foi possível carregar o ingresso.", viewModel::retry)
+                is TicketUiState.Content -> {
+                    val detail = current.value
+                    Text(detail.ticket.eventName)
+                    Text("Valor: ${formatPriceBrl(detail.ticket.unitPriceCents)}")
+                    Text("ID: ${detail.ticket.id}")
+                    when (val qr = detail.qr) {
+                        null -> Text("Gerando QR Code…")
+                        QrResult.Failure -> TicketErrorMessage("Não foi possível gerar o QR Code.", viewModel::retry)
+                        is QrResult.Success -> {
+                            val bitmap = remember(qr.pattern) {
+                                Bitmap.createBitmap(qr.pattern.pixels, qr.pattern.size, qr.pattern.size, Bitmap.Config.ARGB_8888).asImageBitmap()
+                            }
 
-                        Image(bitmap, contentDescription = "QR Code do ingresso", modifier = Modifier.size(256.dp))
+                            Image(bitmap, contentDescription = "QR Code do ingresso", modifier = Modifier.size(256.dp))
+                        }
                     }
                 }
             }
         }
-        TextButton(onClick = onBack) { Text("Voltar") }
     }
 }
 

@@ -42,6 +42,10 @@ Cross-feature flows (events → cart → payment → tickets) are wired by `:app
 passed as route callbacks/args (e.g. `totalCents`). If features ever need to share a type, put a small contract in
 `:core:common`, never a feature→feature dependency.
 
+After authentication, the app-owned bottom navigation connects Home (events), orders, cart and profile.
+It is hidden during authentication and payment, and disabled while cart or logout operations are in progress.
+Switching tabs returns to their root destinations; signing out clears the authenticated back stack.
+
 ## Gradle dependencies per module
 
 Versions live in `gradle/libs.versions.toml` (single source of truth).

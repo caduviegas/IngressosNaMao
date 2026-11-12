@@ -36,16 +36,13 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun EventsRoute(
     onEventClick: (eventId: String, name: String, priceCents: Long) -> Unit,
-    onCartClick: () -> Unit,
     adding: Boolean = false,
     cartError: String? = null,
     viewModel: EventsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Column(verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.sm)) {
-        IngressosTopBar(title = "Eventos", actions = {
-            TextButton(onClick = onCartClick, enabled = !adding) { Text("Ver carrinho") }
-        })
+        IngressosTopBar(title = "Eventos")
         if (adding) Text("Adicionando ao carrinho…", Modifier.padding(IngressosTheme.spacing.md))
         cartError?.let { Text(it, Modifier.padding(IngressosTheme.spacing.md), color = MaterialTheme.colorScheme.error) }
         Box(Modifier.weight(1f)) {

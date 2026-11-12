@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.innaval.ingresosnamao.core.ui.components.IngressosButton
+import com.innaval.ingresosnamao.core.ui.components.IngressosBackScreen
 import com.innaval.ingresosnamao.core.ui.format.formatPriceBrl
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.payment.domain.*
@@ -110,26 +111,26 @@ fun PaymentRoute(
     LaunchedEffect(viewModel, order, enabled) {
         if (enabled) viewModel.startAutomatically(order, credentials, validate)
     }
-    Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.md),
-    ) {
-        Text("Pagamento", style = MaterialTheme.typography.headlineSmall)
-        Text("Total: ${formatPriceBrl(order.totalCents)}")
-        if (!enabled) {
-            Text("O pagamento está desabilitado nesta versão.")
-        } else when (val current = state) {
-            PaymentState.Ready -> {
-                IngressosButton("Tentar novamente", {
-                    viewModel.submitValidated(order, credentials, validate)
-                }, enabled = !validating, loading = validating)
+    IngressosBackScreen("Pagamento", onBack, backEnabled = !validating) {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(IngressosTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(IngressosTheme.spacing.md),
+        ) {
+            Text("Total: ${formatPriceBrl(order.totalCents)}")
+            if (!enabled) {
+                Text("O pagamento está desabilitado nesta versão.")
+            } else when (val current = state) {
+                PaymentState.Ready -> {
+                    IngressosButton("Tentar novamente", {
+                        viewModel.submitValidated(order, credentials, validate)
+                    }, enabled = !validating, loading = validating)
+                }
+                is PaymentState.StorageError -> Text(current.message, color = MaterialTheme.colorScheme.error)
+                is PaymentState.Active -> ActivePayment(current.attempt, order, onPaid)
             }
-            is PaymentState.StorageError -> Text(current.message, color = MaterialTheme.colorScheme.error)
-            is PaymentState.Active -> ActivePayment(current.attempt, order, onPaid)
+            if (enabled) SimulationRecoveryAction(state, viewModel, showError = false)
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
-        if (enabled) SimulationRecoveryAction(state, viewModel, showError = false)
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        TextButton(onClick = onBack, enabled = !validating) { Text("Voltar") }
     }
 }
 

@@ -1,6 +1,8 @@
 package com.innaval.ingresosnamao.feature.payment.presentation
 
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 
@@ -39,5 +41,6 @@ internal class PaymentRobot(compose: ComposeTestRule) {
         fun retryShown() = compose.onNodeWithText("Tentar novamente").assertExists()
         fun discardAvailable() = compose.onNodeWithText("Descartar tentativa").assertExists()
         fun discardUnavailable() = compose.onNodeWithText("Descartar tentativa").assertDoesNotExist()
+        fun backDisabled() = compose.onNodeWithContentDescription("Voltar").assertIsNotEnabled()
     }
 }
