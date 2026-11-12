@@ -1,1 +1,5 @@
 com.innaval.ingresosnamao.core.ui
+drawable ingressos_logo
+string ingressos_brand_name
+string ingressos_loading
+string ingressos_retry

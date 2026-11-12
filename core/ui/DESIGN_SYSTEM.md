@@ -11,7 +11,7 @@ Fornecer uma linguagem visual e componentes Compose compartilhados, consistentes
 - O tema segue a configuração clara/escura do sistema por padrão e permite sobrescrita explícita; não depende de cores dinâmicas do aparelho.
 
 ## 3. Componentes reutilizáveis
-Botões primário, secundário tonal, contornado e textual; campo de texto com rótulo, ajuda, erro e configuração de teclado/senha; card informativo ou clicável; indicador de progresso inline, estados de carregamento, erro e vazio; e top bar com slots de navegação e ações. Componentes não executam operações ou navegam por conta própria.
+Botões primário, secundário tonal, contornado e textual; campo de texto com rótulo, ajuda, erro e configuração de teclado/senha; card informativo ou clicável; indicador de progresso inline, estados de carregamento, erro e vazio; top bar com slots de navegação e ações; e cabeçalho de marca com símbolo vetorial e nome. Componentes não executam operações ou navegam por conta própria.
 
 ## 4. Estados dos componentes
 Botões suportam habilitado, desabilitado e carregando, além dos estados de foco e pressão oferecidos pelo Material. Campos suportam edição, somente leitura, desabilitado, foco e erro com mensagem. Cards clicáveis suportam habilitado, desabilitado, foco e pressão. Loading é indeterminado; erro oferece repetição opcionalmente configurada; vazio admite ação opcional. O chamador controla os estados e callbacks.
@@ -24,7 +24,7 @@ Botões suportam habilitado, desabilitado e carregando, além dos estados de foc
 - Verificações automatizadas de contraste e semântica complementam, mas não substituem, testes com TalkBack, escala de fonte ampliada, teclado e dispositivos reais.
 
 ## 6. Uso entre módulos
-`:app` aplica `IngressosTheme` uma vez na raiz. Features dependem apenas de `:core:ui`, usam `MaterialTheme.colorScheme/typography/shapes`, `IngressosTheme.spacing/extras` e os componentes compartilhados. A paleta bruta é interna. Textos específicos e decisões de navegação permanecem nas features; textos padrão dos componentes usam recursos Android. Alterações não devem criar dependências entre features nem quebrar as chamadas existentes de botão, loading e erro.
+`:app` aplica `IngressosTheme` e `IngressosBrandHeader` uma vez na raiz, acima do conteúdo de todas as rotas; a mesma marca é usada na tela inicial do sistema e nos ícones do aplicativo. Features dependem apenas de `:core:ui`, usam `MaterialTheme.colorScheme/typography/shapes`, `IngressosTheme.spacing/extras` e os componentes compartilhados. Separe elementos de listas, linhas e colunas com os tokens de espaçamento e preserve rolagem para telas pequenas e fontes ampliadas. A paleta bruta é interna. Textos específicos e decisões de navegação permanecem nas features; textos padrão dos componentes usam recursos Android. Alterações não devem criar dependências entre features nem quebrar as chamadas existentes de botão, loading e erro.
 
 ## 7. Critérios de aceite
 1. Tema claro e escuro expõem cores, tipografia, shapes e espaçamentos consistentes, com contraste verificável nos pares semânticos documentados.

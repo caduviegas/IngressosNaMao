@@ -4,4 +4,37 @@
 
     <uses-sdk android:minSdkVersion="24" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <queries>
+        <package android:name="com.ads.lio.uriappclient" />
+        <package android:name="br.com.cielosmart.orderservice" />
+    </queries>
+
+    <application>
+        <meta-data
+            android:name="cs_integration_type"
+            android:value="uri" />
+
+        <service
+            android:name="com.innaval.ingresosnamao.feature.payment.data.PaymentForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <activity
+            android:name="com.innaval.ingresosnamao.feature.payment.presentation.PaymentCallbackActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="response"
+                    android:scheme="ingressosnamao-payment" />
+            </intent-filter>
+        </activity>
+    </application>
+
 </manifest>
