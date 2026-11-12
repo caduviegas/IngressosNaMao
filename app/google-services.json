@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "287874191390",
+    "project_id": "ingressosnamao-73e37",
+    "storage_bucket": "ingressosnamao-73e37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287874191390:android:6dd8d5c219303c2d2f1e0f",
+        "android_client_info": {
+          "package_name": "com.innaval.ingresosnamao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "287874191390-vcc3fikvi65el4aackfi8eefflvtbhn3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.innaval.ingresosnamao",
+            "certificate_hash": "2600bc9f6e6b580eacd3380ed81370601cdece1b"
+          }
+        },
+        {
+          "client_id": "287874191390-kvj7bip6c6b5d078p33b9f3121ljq65e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBONUE18KgXZF8GzxyV3KQINNIgovhpe1Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "287874191390-kvj7bip6c6b5d078p33b9f3121ljq65e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
