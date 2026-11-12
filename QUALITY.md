@@ -27,7 +27,8 @@ integração em dispositivos e serviços reais.
 ## Critérios de aceite e falhas
 
 Em push e pull request, a pipeline deve instalar o SDK Android necessário, executar Detekt,
-testes JVM/Robolectric, relatório e verificação JaCoCo, além de compilar o aplicativo debug.
+testes JVM/Robolectric, relatório e verificação JaCoCo, além de compilar o aplicativo debug e
+o release otimizado com R8.
 O resultado deve falhar para erros de configuração ou compilação, testes com falha, novas
 violações Detekt, dados de cobertura ausentes ou **cobertura agregada de linhas inferior a 80%**.
 Relatórios de testes, Detekt e JaCoCo são disponibilizados como artefatos mesmo em caso de falha,
@@ -39,7 +40,7 @@ oficial Cielo não fazem parte deste workflow; continuam sendo verificações co
 ## Uso e manutenção
 
 - `./gradlew :detekt`: análise e relatórios em `build/reports/detekt/`.
-- `./gradlew :qualityCheck`: análise, testes, relatório, limite de cobertura e compilação debug.
+- `./gradlew :qualityCheck`: análise, testes, relatório, limite de cobertura e compilações debug e release.
 - `./gradlew :jacocoDebugReport :jacocoDebugCoverageVerification`: relatório e limite de 80%.
 - Para isolar as saídas de build, como na CI: `./gradlew --init-script config/ci-build.init.gradle :qualityCheck`.
   Os relatórios ficam em `build/quality/root/reports/`; isso evita reutilizar artefatos antigos
