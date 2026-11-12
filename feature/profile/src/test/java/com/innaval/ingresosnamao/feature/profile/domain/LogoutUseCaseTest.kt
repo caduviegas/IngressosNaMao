@@ -15,7 +15,7 @@ class LogoutUseCaseTest {
     private val logout = LogoutUseCase(repo, cart)
     private val identity = ProfileIdentity("alice", null, null)
 
-    @Test fun clearsBeforeSigningOut() = runTest {
+    @Test fun givenAuthenticatedUserWhenLoggingOutThenClearsCartBeforeSignOut() = runTest {
         coEvery { repo.currentUser() } returns ProfileResult.Success(identity)
         coEvery { cart.clear("alice") } returns ProfileResult.Success(Unit)
         coEvery { repo.signOut("alice") } returns ProfileResult.Success(Unit)
@@ -23,7 +23,7 @@ class LogoutUseCaseTest {
         coVerifyOrder { repo.currentUser(); cart.clear("alice"); repo.signOut("alice") }
     }
 
-    @Test fun sessionChangeOrCartFailureNeverSignsOut() = runTest {
+    @Test fun givenSessionChangeOrCartFailureWhenLoggingOutThenDoesNotSignOut() = runTest {
         coEvery { repo.currentUser() } returns ProfileResult.Success(identity.copy(uid = "bob"))
         assertEquals(ProfileResult.Failure(ProfileError.SESSION_CHANGED), logout("alice"))
         coVerify(exactly = 0) { cart.clear(any()) }
@@ -33,7 +33,7 @@ class LogoutUseCaseTest {
         coVerify(exactly = 0) { repo.signOut(any()) }
     }
 
-    @Test fun errorsAfterClearAndCancellationRemainExplicit() = runTest {
+    @Test fun givenFailureOrCancellationAfterClearWhenLoggingOutThenReportsOrPropagates() = runTest {
         coEvery { repo.currentUser() } returns ProfileResult.Success(identity)
         coEvery { cart.clear("alice") } returns ProfileResult.Success(Unit)
         coEvery { repo.signOut("alice") } returns ProfileResult.Failure(ProfileError.AUTH)
@@ -49,7 +49,7 @@ class LogoutUseCaseTest {
         }
     }
 
-    @Test fun authenticationFailureStopsBeforeCart() = runTest {
+    @Test fun givenAuthenticationFailureWhenLoggingOutThenDoesNotClearCart() = runTest {
         coEvery { repo.currentUser() } returns ProfileResult.Failure(ProfileError.AUTH)
         assertEquals(ProfileResult.Failure(ProfileError.AUTH), logout("alice"))
         coVerify(exactly = 0) { cart.clear(any()) }

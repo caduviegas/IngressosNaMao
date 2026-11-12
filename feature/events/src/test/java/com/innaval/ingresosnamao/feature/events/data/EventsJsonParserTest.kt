@@ -8,7 +8,7 @@ import org.junit.Test
 class EventsJsonParserTest {
     private val parser = EventsJsonParser()
 
-    @Test fun parsesExactPricesAndPreservesOrder() {
+    @Test fun givenEventJsonWhenParsedThenPreservesPricesAndOrder() {
         val result = parser.parse(
             """[
                 {"sku":1,"imageUrl":"https://example.com/1.jpg","name":" Evento 1 ","price":"125.00","quantity":120,"extra":true},
@@ -25,13 +25,13 @@ class EventsJsonParserTest {
         )
     }
 
-    @Test fun acceptsEmptyListAndTrailingDecimalZeros() {
+    @Test fun givenEmptyListAndTrailingZerosWhenParsedThenAcceptsBoth() {
         assertEquals(emptyList<Event>(), parser.parse("[]"))
         val json = """[{"sku":1,"imageUrl":"https://example.com","name":"N","price":1.230,"quantity":1}]"""
         assertEquals(123L, parser.parse(json).single().priceCents)
     }
 
-    @Test fun parsesRemoteConfigExampleWithIntegerSkuAndStringPrices() {
+    @Test fun givenRemoteConfigJsonWhenParsedThenAcceptsIntegerSkuAndStringPrices() {
         val json = """[
             {"sku":101,"imageUrl":"https://images.unsplash.com/a","name":"Festival","price":"49.90","quantity":120},
             {"sku":102,"imageUrl":"https://images.unsplash.com/b","name":"Samba","price":"35.00","quantity":80},
@@ -44,7 +44,7 @@ class EventsJsonParserTest {
         assertEquals(listOf(120, 80, 60, 150), events.map { it.quantity })
     }
 
-    @Test fun rejectsInvalidContractWithoutReturningPartialList() {
+    @Test fun givenInvalidContractWhenParsedThenRejectsEntireList() {
         val valid = """{"sku":1,"imageUrl":"https://example.com","name":"N","price":1,"quantity":1}"""
         val invalidItems = listOf(
             """{"sku":2,"imageUrl":"https://example.com","name":"N","price":"1.001","quantity":1}""",

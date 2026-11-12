@@ -8,13 +8,13 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 class AppResultTest {
-    @Test fun mapTransformsSuccessAndPreservesFailure() {
+    @Test fun givenResultWhenMappedThenTransformsSuccessAndPreservesFailure() {
         assertEquals(AppResult.Success(4), AppResult.Success(2).map { it * 2 })
         val failure = AppResult.Failure(AppError.Network)
         assertSame(failure, failure.map { error("must not be called") })
     }
 
-    @Test fun catchesFailuresButPropagatesCancellation() = runTest {
+    @Test fun givenFailureOrCancellationWhenCatchingThenPreservesCancellation() = runTest {
         assertEquals(AppResult.Success("ok"), runCatchingApp { "ok" })
         val cause = IllegalStateException("failure")
         val failure = runCatchingApp { throw cause } as AppResult.Failure

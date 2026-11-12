@@ -3,12 +3,7 @@ package com.innaval.ingresosnamao.feature.cart.presentation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.cart.domain.CartItem
 import com.innaval.ingresosnamao.feature.cart.domain.CartError
@@ -20,19 +15,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-private class CartRobot(private val compose: ComposeTestRule) {
-    fun assertEmpty() = compose.onNodeWithText("Seu carrinho está vazio.").assertExists()
-    fun assertCheckoutDisabled() = compose.onNodeWithText("Finalizar compra").assertIsNotEnabled()
-    fun increase() = compose.onNodeWithContentDescription("Aumentar quantidade de Show").performClick()
-    fun remove() = compose.onNodeWithText("Remover").performClick()
-}
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class CartRobotTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun emptyCartBlocksCheckoutAndItemActionsAreForwarded() {
+    @Test fun givenCartStatesWhenInteractedWithThenBlocksEmptyAndForwardsActions() {
         val item = CartItem("event", "Show", 100, 1)
         var state by mutableStateOf(CartUiState(loading = false, cart = CartSnapshot(emptyList(), 0)))
         var quantityChange = 0
@@ -43,18 +31,18 @@ class CartRobotTest {
             }
         }
         val robot = CartRobot(compose)
-        robot.assertEmpty()
-        robot.assertCheckoutDisabled()
+        robot.result.emptyShown()
+        robot.result.checkoutDisabled()
         compose.runOnIdle { state = state.copy(cart = CartSnapshot(listOf(item), 100)) }
-        robot.increase()
-        robot.remove()
+        robot.action.increase()
+        robot.action.remove()
         compose.runOnIdle {
             assertEquals(1, quantityChange)
             assertEquals(item, removed)
         }
     }
 
-    @Test fun storageErrorOffersRetry() {
+    @Test fun givenStorageErrorWhenDisplayedThenOffersRetry() {
         var retries = 0
         compose.setContent {
             IngressosTheme {
@@ -64,8 +52,9 @@ class CartRobotTest {
                 )
             }
         }
-        compose.onNodeWithText("Não foi possível acessar o carrinho. Tente novamente.").assertExists()
-        compose.onNodeWithText("Tentar novamente").performClick()
+        val robot = CartRobot(compose)
+        robot.result.storageErrorShown()
+        robot.action.retry()
         compose.runOnIdle { assertEquals(1, retries) }
     }
 }

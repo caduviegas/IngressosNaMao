@@ -29,7 +29,7 @@ class PaymentViewModelTest {
 
     @After fun cleanup() = Dispatchers.resetMain()
 
-    @Test fun displaysExplicitStartFailure() {
+    @Test fun givenStartFailureWhenSubmittingThenDisplaysError() {
         val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
         val credentials = TestCredentials("client", "token")
         every { repository.start(order, credentials) } returns StartResult.Failure("Indisponível")
@@ -39,7 +39,7 @@ class PaymentViewModelTest {
         verify(exactly = 1) { repository.start(order, credentials) }
     }
 
-    @Test fun failedStockValidationBlocksPaymentAndDuplicateSubmissions() {
+    @Test fun givenFailedStockValidationWhenSubmittingThenBlocksPaymentAndDuplicates() {
         val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
         val credentials = TestCredentials("client", "token")
         val validation = CompletableDeferred<String?>()
@@ -55,7 +55,7 @@ class PaymentViewModelTest {
         verify(exactly = 0) { repository.start(any(), any()) }
     }
 
-    @Test fun automaticStartRunsOnceAndValidationFailureRequiresManualRetry() {
+    @Test fun givenValidationFailureWhenStartingAutomaticallyThenRequiresManualRetry() {
         val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
         val credentials = TestCredentials("client", "token")
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
@@ -73,7 +73,7 @@ class PaymentViewModelTest {
         verify(exactly = 1) { repository.start(order, credentials) }
     }
 
-    @Test fun existingAttemptIsNotAutomaticallyRestartedAfterDiscard() {
+    @Test fun givenExistingAttemptWhenDiscardedThenDoesNotRestartAutomatically() {
         val order = PaymentOrder("u", "fp", listOf(PaymentItem("id", "item", 1, 100)), 100)
         val state = MutableStateFlow<PaymentState>(
             PaymentState.Active(PaymentAttempt("ref", order, 1, AttemptStatus.UNKNOWN))
@@ -88,7 +88,7 @@ class PaymentViewModelTest {
         verify(exactly = 0) { repository.start(any(), any()) }
     }
 
-    @Test fun discardFailureIsDisplayed() {
+    @Test fun givenDiscardFailureWhenDiscardingThenDisplaysError() {
         val state = PaymentState.StorageError("Falha")
         every { repository.discardSimulation(state) } returns
             DiscardSimulationResult.Failure("Não foi possível remover a tentativa de teste.")

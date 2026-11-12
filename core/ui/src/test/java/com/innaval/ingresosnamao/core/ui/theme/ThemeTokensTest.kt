@@ -10,12 +10,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ThemeTokensTest {
-    @Test fun textAndControlColorsMeetContrastInBothThemes() {
+    @Test fun givenBothThemesWhenCheckingColorsThenMeetContrastRequirements() {
         verifyColors(LightColors, LightExtraColors)
         verifyColors(DarkColors, DarkExtraColors)
     }
 
-    @Test fun spacingAndTypographyUseScalableTokens() {
+    @Test fun givenThemeWhenCheckingTokensThenSpacingAndTypographyScale() {
         assertEquals(listOf(4.dp, 8.dp, 16.dp, 24.dp, 32.dp),
             Spacing().let { listOf(it.xs, it.sm, it.md, it.lg, it.xl) })
         assertEquals(16.sp, IngressosTypography.bodyLarge.fontSize)

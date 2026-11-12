@@ -27,7 +27,7 @@ class TicketViewModelTest {
     @Before fun setup() = Dispatchers.setMain(dispatcher)
     @After fun cleanup() = Dispatchers.resetMain()
 
-    @Test fun detailShowsQrFailureForOwnedTicket() = runTest(dispatcher) {
+    @Test fun givenOwnedTicketWhenQrGenerationFailsThenShowsError() = runTest(dispatcher) {
         val ticket = Ticket("id", "ref", "event", "Show", 100)
         every { repository.observeTicket("alice", "id") } returns flowOf(TicketResult.Success(ticket))
         coEvery { qr.generate("id") } returns QrResult.Failure
@@ -38,7 +38,7 @@ class TicketViewModelTest {
         coVerify(exactly = 1) { qr.generate("id") }
     }
 
-    @Test fun listDistinguishesEmptyAndStorageError() = runTest(dispatcher) {
+    @Test fun givenEmptyListOrStorageFailureWhenLoadedThenShowsDistinctStates() = runTest(dispatcher) {
         every { repository.observePurchases("alice") } returnsMany listOf(
             flowOf(TicketResult.Success(emptyList())),
             flowOf(TicketResult.Failure(TicketError.STORAGE)),

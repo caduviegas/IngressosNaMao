@@ -58,7 +58,7 @@ class CartRoomTest {
         return db to RoomCartRepository(CartLocalDataSource(db, db.cartDao()), dispatchers, availability)
     }
 
-    @Test fun persistsRestoresAndIsolatesAccounts() = runBlocking {
+    @Test fun givenCartsForAccountsWhenReopenedThenRestoresAndIsolatesThem() = runBlocking {
         val (db, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         assertEquals(CartResult.Success(Unit), repo.add("alice", item))
@@ -84,7 +84,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(emptyList(), 0)), reopened.get("bob"))
     }
 
-    @Test fun overflowRejectsMutationWithoutChangingStoredCart() = runBlocking {
+    @Test fun givenOverflowWhenMutatingCartThenPreservesStoredCart() = runBlocking {
         val (_, repo) = open()
         stockPrice = Long.MAX_VALUE
         val item = CartItem("event", "Show", Long.MAX_VALUE, 1)
@@ -94,7 +94,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item), Long.MAX_VALUE)), repo.get("u"))
     }
 
-    @Test fun logoutClearsOnlyCurrentUsersCartAndPersistsAcrossReopen() = runBlocking {
+    @Test fun givenMultipleCartsWhenLoggingOutThenClearsOnlyCurrentUserAcrossReopen() = runBlocking {
         val (db, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         assertEquals(CartResult.Success(Unit), repo.add("alice", item))
@@ -108,7 +108,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), reopened.get("bob"))
     }
 
-    @Test fun concurrentAdditionsDoNotLoseUpdates() = runBlocking {
+    @Test fun givenConcurrentAdditionsWhenSavedThenPreservesAllUpdates() = runBlocking {
         val (_, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         val results = coroutineScope { List(10) { async { repo.add("u", item) } }.awaitAll() }
@@ -116,7 +116,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 10)), 1000)), repo.get("u"))
     }
 
-    @Test fun stockIsEnforcedTransactionallyAndOfflineReductionStillWorks() = runBlocking {
+    @Test fun givenStockLimitWhenChangingQuantityThenEnforcesLimitAndAllowsOfflineReduction() = runBlocking {
         val (db, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         stockQuantity = 2
@@ -134,7 +134,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(Unit), reopened.remove("u", "event"))
     }
 
-    @Test fun zeroStockAndChangedPriceDoNotChangeCart() = runBlocking {
+    @Test fun givenZeroStockOrChangedPriceWhenAddingThenPreservesCart() = runBlocking {
         val (_, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         stockQuantity = 0
@@ -146,7 +146,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), repo.get("u"))
     }
 
-    @Test fun paidCleanupDoesNotRemoveItemsChangedAfterCheckout() = runBlocking {
+    @Test fun givenChangedCartWhenCleaningUpPaidOrderThenPreservesItems() = runBlocking {
         val (_, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         assertEquals(CartResult.Success(Unit), repo.add("u", item))
@@ -156,7 +156,7 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 2)), 200)), repo.get("u"))
     }
 
-    @Test fun migrationPreservesExistingTickets() = runBlocking {
+    @Test fun givenExistingTicketsWhenDatabaseMigratesThenPreservesTickets() = runBlocking {
         context.openOrCreateDatabase(databaseName, Context.MODE_PRIVATE, null).use { db ->
             db.execSQL("CREATE TABLE IF NOT EXISTS tickets (id TEXT NOT NULL PRIMARY KEY, eventId TEXT NOT NULL, eventName TEXT NOT NULL, qrCode TEXT NOT NULL)")
             db.execSQL("INSERT INTO tickets (id, eventId, eventName, qrCode) VALUES ('ticket', 'event', 'Show', 'qr')")

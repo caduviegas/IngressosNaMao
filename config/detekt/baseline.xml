@@ -17,7 +17,7 @@
     <ID>CyclomaticComplexMethod:TicketRepositoryImpl.kt:TicketRepositoryImpl$override suspend fun issue: TicketResult&lt;Receipt&gt;</ID>
     <ID>LongMethod:AppNavHost.kt:@Composable fun AppNavHost</ID>
     <ID>LongMethod:LoginScreen.kt:@Composable fun AuthScreen</ID>
-    <ID>LongMethod:PurchaseFlowRobotTest.kt:PurchaseFlowRobotTest$@Test fun approvedSimulationEmitsTicketBeforeClearingCart</ID>
+    <ID>LongMethod:PurchaseFlowRobotTest.kt:PurchaseFlowRobotTest$@Test fun givenApprovedPaymentWhenContinuingThenIssuesTicketBeforeClearingCart</ID>
     <ID>MagicNumber:Auth.kt:AuthValidation$100</ID>
     <ID>MagicNumber:Auth.kt:AuthValidation$128</ID>
     <ID>MagicNumber:Auth.kt:AuthValidation$254</ID>

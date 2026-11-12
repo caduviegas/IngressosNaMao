@@ -32,7 +32,7 @@ import org.robolectric.annotation.Config
 class ComponentsTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun loadingButtonIsDisabledAndAnnounced() {
+    @Test fun givenLoadingButtonWhenDisplayedThenDisablesAndAnnouncesProgress() {
         var loading by mutableStateOf(false)
         var clicks = 0
         compose.setContent {
@@ -48,7 +48,7 @@ class ComponentsTest {
         compose.runOnIdle { assertEquals(1, clicks) }
     }
 
-    @Test fun fieldExposesSpecificErrorAndLoadingHasProgressSemantics() {
+    @Test fun givenFieldErrorAndLoadingWhenDisplayedThenExposesSemantics() {
         compose.setContent {
             IngressosTheme {
                 androidx.compose.foundation.layout.Column {
@@ -64,7 +64,7 @@ class ComponentsTest {
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate))
     }
 
-    @Test fun errorActionCallsProvidedCallback() {
+    @Test fun givenErrorActionWhenClickedThenCallsCallback() {
         var count = 0
         compose.setContent { IngressosTheme { ErrorState("Falha", { count++ }, retryLabel = "Voltar") } }
         compose.onNodeWithText("Falha").assertExists()
@@ -72,7 +72,7 @@ class ComponentsTest {
         compose.runOnIdle { assertEquals(1, count) }
     }
 
-    @Test fun emptyStateActionIsOptionalAndInteractive() {
+    @Test fun givenEmptyStateWhenActionProvidedThenAllowsInteraction() {
         var count = 0
         compose.setContent {
             IngressosTheme {
@@ -84,13 +84,13 @@ class ComponentsTest {
         compose.runOnIdle { assertEquals(1, count) }
     }
 
-    @Test fun errorCanBeShownWithoutAnAction() {
+    @Test fun givenErrorWithoutActionWhenDisplayedThenShowsMessage() {
         compose.setContent { IngressosTheme { ErrorState("Indisponível") } }
         compose.onNodeWithText("Indisponível").assertExists()
         compose.onNodeWithText("Tentar novamente").assertDoesNotExist()
     }
 
-    @Test fun clickableComponentsHaveMinimumTouchSizeAndDisabledCardIsDisabled() {
+    @Test fun givenClickableComponentsWhenDisplayedThenMeetTouchSizeAndDisabledState() {
         compose.setContent {
             IngressosTheme {
                 androidx.compose.foundation.layout.Column {
@@ -103,7 +103,7 @@ class ComponentsTest {
         compose.onNodeWithText("Evento").assertIsNotEnabled().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
     }
 
-    @Test fun buttonStylesAndTopBarExposeAccessibleSemantics() {
+    @Test fun givenButtonStylesAndTopBarWhenDisplayedThenExposeSemantics() {
         var clicks = 0
         compose.setContent {
             IngressosTheme {
@@ -120,7 +120,7 @@ class ComponentsTest {
         compose.runOnIdle { assertEquals(4, clicks) }
     }
 
-    @Test fun brandHeaderShowsNameAboveContentInBothThemes() {
+    @Test fun givenBothThemesWhenHeaderDisplayedThenShowsNameAboveContent() {
         var dark by mutableStateOf(false)
         compose.setContent {
             IngressosTheme(darkTheme = dark) {

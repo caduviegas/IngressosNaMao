@@ -11,7 +11,7 @@ class SimulatedPurchaseTest {
     private val order = PaymentOrder("alice", "fp", listOf(PaymentItem("event", "Show", 2, 100)), 200)
     private val attempt = PaymentAttempt("ref", order, 1, AttemptStatus.APPROVED, "order")
 
-    @Test fun onlyApprovedMatchingDebugAttemptIsMapped() {
+    @Test fun givenPaymentAttemptWhenMappingPurchaseThenRequiresMatchingDebugApproval() {
         val purchase = requireNotNull(approvedSimulation(true, "alice", "fp", attempt))
         assertEquals("order", purchase.orderId)
         assertEquals(2, purchase.items.single().quantity)

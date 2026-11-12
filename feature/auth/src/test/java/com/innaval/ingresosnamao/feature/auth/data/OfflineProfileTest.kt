@@ -10,7 +10,7 @@ class OfflineProfileTest {
     private class Offline : Exception()
     private class Denied : Exception()
 
-    @Test fun offlineUsesOnlyConfirmedCache() = runTest {
+    @Test fun givenOfflineProfileWhenLoadedThenUsesOnlyConfirmedCache() = runTest {
         val unavailable = Offline()
         assertEquals("profile", readWithConfirmedCache(
             server = { throw unavailable }, cache = { "profile" }, confirmed = { true }, canUseCache = { it is Offline }
@@ -25,7 +25,7 @@ class OfflineProfileTest {
         }
     }
 
-    @Test fun permissionFailureNeverFallsBackToCache() = runTest {
+    @Test fun givenPermissionFailureWhenLoadingProfileThenDoesNotUseCache() = runTest {
         val denied = Denied()
         try {
             readWithConfirmedCache(
@@ -38,7 +38,7 @@ class OfflineProfileTest {
         }
     }
 
-    @Test fun cacheCancellationPropagates() = runTest {
+    @Test fun givenCancelledCacheWhenLoadingProfileThenPropagatesCancellation() = runTest {
         try {
             readWithConfirmedCache(
                 server = { throw Offline() }, cache = { throw CancellationException() },

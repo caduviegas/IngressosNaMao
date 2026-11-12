@@ -27,7 +27,7 @@ class CartCleanupViewModelTest {
     @Before fun setup() = Dispatchers.setMain(dispatcher)
     @After fun cleanup() = Dispatchers.resetMain()
 
-    @Test fun failedClearCanBeRetriedWithoutAnotherPayment() = runTest(dispatcher) {
+    @Test fun givenFailedCleanupWhenRetriedThenDoesNotPayAgain() = runTest(dispatcher) {
         val fingerprint = "a".repeat(64)
         coEvery { repository.clear("user", fingerprint) } returnsMany listOf(
             CartResult.Failure(CartError.STORAGE), CartResult.Success(Unit)

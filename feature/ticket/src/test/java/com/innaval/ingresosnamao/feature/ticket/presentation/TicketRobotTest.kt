@@ -1,12 +1,6 @@
 package com.innaval.ingresosnamao.feature.ticket.presentation
 
-import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.performClick
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.ticket.domain.*
 import io.mockk.every
@@ -20,24 +14,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-private class TicketRobot(private val compose: ComposeTestRule) {
-    fun retryReceipt() {
-        compose.onNodeWithText("Não foi possível carregar o comprovante.").assertExists()
-        compose.onNodeWithText("Tentar novamente").performClick()
-    }
-    fun openTicket() {
-        compose.onNodeWithText("Este resumo não comprova pagamento.").assertExists()
-        compose.onNodeWithText("Ingressos: 1").assertExists()
-        compose.onNode(hasText("Show", substring = true) and hasClickAction()).performClick()
-    }
-}
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class TicketRobotTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun receiptErrorCanBeRetriedAndTicketOpened() {
+    @Test fun givenReceiptErrorWhenRetriedThenAllowsOpeningTicket() {
         val ticket = Ticket("ticket-id", "reference", "event", "Show", 100)
         val receipt = Receipt(PurchaseSummary("reference", "order", 100, 1), listOf(ticket))
         val repository = mockk<TicketRepository>()
@@ -51,12 +33,14 @@ class TicketRobotTest {
             IngressosTheme { ReceiptRoute("alice", "reference", { opened = it }, {}, viewModel) }
         }
         val robot = TicketRobot(compose)
-        robot.retryReceipt()
-        robot.openTicket()
+        robot.result.receiptErrorShown()
+        robot.action.retry()
+        robot.result.receiptShown()
+        robot.action.openTicket()
         compose.runOnIdle { assertEquals("ticket-id", opened) }
     }
 
-    @Test fun qrFailureCanBeRetriedForTheOwnedTicket() {
+    @Test fun givenOwnedTicketAndQrFailureWhenRetriedThenShowsQr() {
         val ticket = Ticket("ticket-id", "reference", "event", "Show", 100)
         val repository = mockk<TicketRepository>()
         val generator = mockk<QrCodeGenerator>()
@@ -69,9 +53,9 @@ class TicketRobotTest {
         compose.setContent {
             IngressosTheme { TicketDetailRoute("alice", "ticket-id", {}, viewModel) }
         }
-        compose.onNodeWithText("Ingresso sem validade de entrada.").assertExists()
-        compose.onNodeWithText("Não foi possível gerar o QR Code.").assertExists()
-        compose.onNodeWithText("Tentar novamente").performClick()
-        compose.onNodeWithContentDescription("QR Code do ingresso").assertExists()
+        val robot = TicketRobot(compose)
+        robot.result.invalidTicketAndQrErrorShown()
+        robot.action.retry()
+        robot.result.qrShown()
     }
 }

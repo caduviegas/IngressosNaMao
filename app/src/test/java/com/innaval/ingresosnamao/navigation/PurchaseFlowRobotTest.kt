@@ -1,13 +1,7 @@
 package com.innaval.ingresosnamao.navigation
 
 import android.app.Application
-import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.BuildConfig
@@ -33,27 +27,12 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-private class PurchaseFlowRobot(private val compose: ComposeTestRule) {
-    fun selectEvent() = compose.onNode(hasText("Show") and hasClickAction()).performClick()
-    fun checkout() = compose.onNodeWithText("Finalizar compra").performScrollTo().performClick()
-    fun continueApproved() = compose.onNodeWithText("Continuar").performClick()
-    fun openTicket() {
-        compose.onNodeWithText("Este resumo não comprova pagamento.").assertExists()
-        compose.onNode(hasText("Show", substring = true) and hasClickAction()).performClick()
-    }
-    fun assertTicket() {
-        compose.onNodeWithText("Detalhes do ingresso").assertExists()
-        compose.onNodeWithText("ID: ticket-id").assertExists()
-        compose.onNodeWithText("Ingresso sem validade de entrada.").assertExists()
-    }
-}
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = Application::class)
 class PurchaseFlowRobotTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun approvedSimulationEmitsTicketBeforeClearingCart() {
+    @Test fun givenApprovedPaymentWhenContinuingThenIssuesTicketBeforeClearingCart() {
         val auth = mockk<AuthRepository>()
         val events = mockk<EventRepository>()
         val cart = mockk<CartRepository>()
@@ -120,11 +99,12 @@ class PurchaseFlowRobotTest {
             }
         }
         val robot = PurchaseFlowRobot(compose)
-        robot.selectEvent()
-        robot.checkout()
-        robot.continueApproved()
-        robot.openTicket()
-        robot.assertTicket()
+        robot.action.selectEvent()
+        robot.action.checkout()
+        robot.action.continueApproved()
+        robot.result.receiptShown()
+        robot.action.openTicket()
+        robot.result.ticketShown()
         verify(exactly = 1) {
             payments.start(any(), TestCredentials(BuildConfig.CIELO_CLIENT_ID, BuildConfig.CIELO_ACCESS_TOKEN))
         }

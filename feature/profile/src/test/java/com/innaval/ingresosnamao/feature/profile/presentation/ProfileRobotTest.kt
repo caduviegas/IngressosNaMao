@@ -1,9 +1,6 @@
 package com.innaval.ingresosnamao.feature.profile.presentation
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.feature.profile.domain.ProfileError
 import com.innaval.ingresosnamao.feature.profile.domain.ProfileIdentity
@@ -20,7 +17,7 @@ import org.robolectric.annotation.Config
 class ProfileRobotTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun profileShowsMissingFieldsAndLogoutConfirmation() {
+    @Test fun givenProfileWithMissingFieldsWhenLoggingOutThenShowsConfirmation() {
         var requested = 0
         var confirmed = 0
         compose.setContent {
@@ -40,12 +37,13 @@ class ProfileRobotTest {
                 )
             }
         }
-        compose.onNodeWithText("Sair da conta?").assertIsDisplayed()
-        compose.onNodeWithText("Sair").performClick()
+        val robot = ProfileRobot(compose)
+        robot.result.logoutConfirmationShown()
+        robot.action.confirmLogout()
         compose.runOnIdle { assertEquals(1, confirmed); assertEquals(0, requested) }
     }
 
-    @Test fun missingDataAndReadErrorAreVisible() {
+    @Test fun givenMissingDataAndReadErrorWhenDisplayedThenShowsMessages() {
         var retry = 0
         compose.setContent {
             IngressosTheme {
@@ -63,13 +61,14 @@ class ProfileRobotTest {
                 )
             }
         }
-        compose.onNodeWithText("Não foi possível carregar seu perfil. Tente novamente.").assertIsDisplayed()
-        compose.onNodeWithText("Tentar novamente").performClick()
-        compose.onNodeWithText("Sair da conta").assertExists()
+        val robot = ProfileRobot(compose)
+        robot.result.readErrorShown()
+        robot.action.retry()
+        robot.result.logoutAvailable()
         compose.runOnIdle { assertEquals(1, retry) }
     }
 
-    @Test fun unavailableAddressAndCachedDataAreVisible() {
+    @Test fun givenUnavailableAddressAndCachedDataWhenDisplayedThenShowsBoth() {
         compose.setContent {
             IngressosTheme {
                 ProfileScreen(
@@ -86,9 +85,6 @@ class ProfileRobotTest {
                 )
             }
         }
-        compose.onNodeWithText("Ana").assertIsDisplayed()
-        compose.onNodeWithText("ana@example.com").assertIsDisplayed()
-        compose.onNodeWithText("Não informado").assertIsDisplayed()
-        compose.onNodeWithText("Dados salvos no dispositivo; podem estar desatualizados.").assertIsDisplayed()
+        ProfileRobot(compose).result.cachedProfileShown()
     }
 }

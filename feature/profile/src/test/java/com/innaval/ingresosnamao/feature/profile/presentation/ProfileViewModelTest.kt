@@ -47,7 +47,7 @@ class ProfileViewModelTest {
 
     private fun create() = ProfileViewModel(GetProfileUseCase(repo), LogoutUseCase(repo, cart))
 
-    @Test fun loadsProfileAndRequiresConfirmationForLogout() = runTest(dispatcher) {
+    @Test fun givenProfileWhenLoggingOutThenRequiresConfirmation() = runTest(dispatcher) {
         val vm = create()
         assertTrue(vm.state.value.loading)
         advanceUntilIdle()
@@ -65,7 +65,7 @@ class ProfileViewModelTest {
         coVerify(exactly = 1) { cart.clear("uid") }
     }
 
-    @Test fun readFailureCanRetryOrLogout() = runTest(dispatcher) {
+    @Test fun givenProfileReadFailureWhenDisplayedThenAllowsRetryOrLogout() = runTest(dispatcher) {
         coEvery { repo.load(identity) } returnsMany listOf(
             ProfileResult.Failure(ProfileError.READ), ProfileResult.Success(profile)
         )
@@ -79,7 +79,7 @@ class ProfileViewModelTest {
         assertEquals(null, vm.state.value.error)
     }
 
-    @Test fun logoutFailureKeepsSessionAndAllowsRetry() = runTest(dispatcher) {
+    @Test fun givenLogoutFailureWhenDisplayedThenKeepsSessionAndAllowsRetry() = runTest(dispatcher) {
         coEvery { cart.clear("uid") } returnsMany listOf(
             ProfileResult.Failure(ProfileError.CART), ProfileResult.Success(Unit)
         )
@@ -97,7 +97,7 @@ class ProfileViewModelTest {
         assertTrue(vm.state.value.signedOut)
     }
 
-    @Test fun duplicateActionsAreBlockedWhileLoadingAndLoggingOut() = runTest(dispatcher) {
+    @Test fun givenLoadingOrLogoutWhenActionRepeatedThenBlocksDuplicate() = runTest(dispatcher) {
         val result = CompletableDeferred<ProfileResult<Unit>>()
         coEvery { cart.clear("uid") } coAnswers { result.await() }
         val vm = create()
@@ -116,7 +116,7 @@ class ProfileViewModelTest {
         coVerify(exactly = 1) { cart.clear("uid") }
     }
 
-    @Test fun noSessionReturnsToLoginAndAuthFailureCanRetry() = runTest(dispatcher) {
+    @Test fun givenNoSessionOrAuthFailureWhenLoadedThenReturnsToLoginOrAllowsRetry() = runTest(dispatcher) {
         coEvery { repo.currentUser() } returnsMany listOf(
             ProfileResult.Failure(ProfileError.AUTH), ProfileResult.Success(null)
         )

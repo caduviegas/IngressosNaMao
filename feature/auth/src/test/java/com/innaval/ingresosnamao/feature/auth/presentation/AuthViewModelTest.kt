@@ -42,7 +42,7 @@ class AuthViewModelTest {
         SignOutUseCase(logout),
     )
 
-    @Test fun invalidInputsDoNotCallRepository() = runTest(dispatcher) {
+    @Test fun givenInvalidInputsWhenSubmittedThenDoesNotCallRepository() = runTest(dispatcher) {
         val vm = viewModel()
         advanceUntilIdle()
         vm.submitLogin()
@@ -56,7 +56,7 @@ class AuthViewModelTest {
         coVerify(exactly = 0) { repository.register(any(), any()) }
     }
 
-    @Test fun registrationValidationChecksBoundaries() {
+    @Test fun givenRegistrationFieldsWhenValidatedThenChecksBoundaries() {
         assertTrue(AuthValidation.registration(Registration("A", "a@b.co", "Rua", "123456")).isEmpty())
         assertEquals(
             setOf(Field.NAME, Field.ADDRESS, Field.PASSWORD),
@@ -65,7 +65,7 @@ class AuthViewModelTest {
         assertTrue(AuthValidation.login("a@b.co", "x".repeat(129)).isEmpty())
     }
 
-    @Test fun loginWaitsForServerProfileBeforeAuthenticating() = runTest(dispatcher) {
+    @Test fun givenLoginWhenProfileIsLoadingThenWaitsBeforeAuthenticating() = runTest(dispatcher) {
         coEvery { repository.login("user@example.com", "secret") } returns AuthResult.Success(user)
         coEvery { repository.getProfile(user) } returns AuthResult.Success(profile)
         val vm = viewModel()
@@ -79,7 +79,7 @@ class AuthViewModelTest {
         coVerify(exactly = 1) { repository.getProfile(user) }
     }
 
-    @Test fun missingGoogleProfileRequiresCompletion() = runTest(dispatcher) {
+    @Test fun givenMissingGoogleProfileWhenSigningInThenRequiresCompletion() = runTest(dispatcher) {
         coEvery { repository.loginWithGoogle("token") } returns AuthResult.Success(user)
         coEvery { repository.getProfile(user) } returns AuthResult.Success(null)
         val vm = viewModel()
@@ -91,7 +91,7 @@ class AuthViewModelTest {
         assertEquals(user.name, vm.state.value.name)
     }
 
-    @Test fun existingSessionWithReadFailureCanRetryWithoutAssumingMissingProfile() = runTest(dispatcher) {
+    @Test fun givenExistingSessionAndReadFailureWhenRetriedThenDoesNotAssumeMissingProfile() = runTest(dispatcher) {
         coEvery { repository.currentUser() } returns AuthResult.Success(user)
         coEvery { repository.getProfile(user) } returnsMany listOf(
             AuthResult.Failure(AuthError.PROFILE_READ), AuthResult.Success(profile)
@@ -105,7 +105,7 @@ class AuthViewModelTest {
         assertEquals(AuthStage.AUTHENTICATED, vm.state.value.stage)
     }
 
-    @Test fun leavingIncompleteProfileReportsLogoutFailureAndCanRetry() = runTest(dispatcher) {
+    @Test fun givenIncompleteProfileWhenLogoutFailsThenReportsErrorAndAllowsRetry() = runTest(dispatcher) {
         coEvery { repository.currentUser() } returns AuthResult.Success(user)
         coEvery { repository.getProfile(user) } returns AuthResult.Failure(AuthError.PROFILE_READ)
         coEvery { logout.signOut(user.id) } returnsMany listOf(
@@ -124,7 +124,7 @@ class AuthViewModelTest {
         coVerify(exactly = 2) { logout.signOut(user.id) }
     }
 
-    @Test fun registrationProfileFailureCanBeRetriedWithoutRecreatingAccount() = runTest(dispatcher) {
+    @Test fun givenProfileSaveFailureWhenRetriedThenDoesNotRecreateAccount() = runTest(dispatcher) {
         coEvery { repository.register("user@example.com", "secret") } returns AuthResult.Success(user)
         coEvery { repository.saveProfile(user, profile) } returnsMany listOf(
             AuthResult.Failure(AuthError.PROFILE_WRITE), AuthResult.Success(Unit)
@@ -148,7 +148,7 @@ class AuthViewModelTest {
         coVerify(exactly = 2) { repository.saveProfile(user, profile) }
     }
 
-    @Test fun duplicateSubmitIsIgnoredAndErrorsAreVisible() = runTest(dispatcher) {
+    @Test fun givenPendingLoginWhenSubmittedAgainThenIgnoresDuplicateAndShowsErrors() = runTest(dispatcher) {
         val result = CompletableDeferred<AuthResult<AuthUser>>()
         coEvery { repository.login(any(), any()) } coAnswers { result.await() }
         val vm = viewModel()
@@ -166,7 +166,7 @@ class AuthViewModelTest {
         coVerify(exactly = 1) { repository.login(any(), any()) }
     }
 
-    @Test fun googleCancellationIsNotSuccess() = runTest(dispatcher) {
+    @Test fun givenGoogleCancellationWhenSigningInThenDoesNotAuthenticate() = runTest(dispatcher) {
         val vm = viewModel()
         advanceUntilIdle()
         vm.submitGoogle { AuthResult.Failure(AuthError.GOOGLE_CANCELLED) }
@@ -176,7 +176,7 @@ class AuthViewModelTest {
         coVerify(exactly = 0) { repository.loginWithGoogle(any()) }
     }
 
-    @Test fun useCasePropagatesCancellation() = runTest(dispatcher) {
+    @Test fun givenCancelledLoginWhenUseCaseRunsThenPropagatesCancellation() = runTest(dispatcher) {
         coEvery { repository.login(any(), any()) } throws CancellationException("cancelled")
         try {
             LoginUseCase(repository)("user@example.com", "secret")
