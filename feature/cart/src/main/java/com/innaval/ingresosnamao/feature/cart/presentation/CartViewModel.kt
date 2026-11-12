@@ -22,6 +22,7 @@ class CartViewModel(
     private val getCart: GetCartUseCase,
     private val setQuantity: SetCartQuantityUseCase,
     private val removeItem: RemoveFromCartUseCase,
+    private val validateAvailability: ValidateCartAvailabilityUseCase,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(CartUiState())
     val state = mutableState.asStateFlow()
@@ -62,9 +63,18 @@ class CartViewModel(
                     val cart = result.value
                     if (cart.items.isNotEmpty() && cart.totalCents == 0L) {
                         mutableState.update { it.copy(busy = false, cart = cart, error = CartError.FREE_CHECKOUT_UNSUPPORTED) }
+                    } else if (cart.items.isNotEmpty()) {
+                        when (val validation = validateAvailability(cart)) {
+                            is CartResult.Failure -> mutableState.update {
+                                it.copy(busy = false, cart = cart, error = validation.error)
+                            }
+                            is CartResult.Success -> {
+                                mutableState.update { it.copy(busy = false, cart = cart) }
+                                onCheckout(cart.totalCents, cartFingerprint(cart))
+                            }
+                        }
                     } else {
                         mutableState.update { it.copy(busy = false, cart = cart) }
-                        if (cart.items.isNotEmpty()) onCheckout(cart.totalCents, cartFingerprint(cart))
                     }
                 }
             }

@@ -47,7 +47,7 @@ class EventsRobotTest {
     }
 
     @Test fun selectingAnEventForwardsItsIdentityAndIsBlockedWhileAdding() {
-        val event = EventUiModel("event-1", "file:///missing-image", "Show", "R$ 10,00", 1000)
+        val event = EventUiModel("event-1", "file:///missing-image", "Show", "R$ 10,00", 1000, 5)
         var adding by mutableStateOf(false)
         var selected: Triple<String, String, Long>? = null
         compose.setContent {
@@ -58,6 +58,7 @@ class EventsRobotTest {
                     {}, adding,
                 )
             }
+
         }
         val robot = EventsRobot(compose)
         robot.selectEvent()
@@ -66,5 +67,14 @@ class EventsRobotTest {
             adding = true
         }
         robot.assertEventDisabled()
+    }
+
+    @Test fun soldOutEventShowsAvailabilityAndCannotBeSelected() {
+        val event = EventUiModel("10", "file:///missing-image", "Show", "R$ 10,00", 1000, 0)
+        compose.setContent {
+            IngressosTheme { EventsScreen(EventsUiState.Content(listOf(event), false), { _, _, _ -> }, {}) }
+        }
+        compose.onNodeWithText("Esgotado").assertExists()
+        EventsRobot(compose).assertEventDisabled()
     }
 }

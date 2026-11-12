@@ -20,8 +20,17 @@ class EventRepositoryImplTest {
     private val dispatchers = mockk<DispatcherProvider> { every { io } returns dispatcher }
     private val source = mockk<EventsRemoteDataSource>()
     private val repository = EventRepositoryImpl(source, EventsJsonParser(), dispatchers)
-    private val json = """[{"id":"1","name":"Show","imageUrl":"https://example.com/a.jpg","price":125.00}]"""
-    private val events = listOf(Event("1", "https://example.com/a.jpg", "Show", 12500))
+    private val json = """[{"sku":1,"name":"Show","imageUrl":"https://example.com/a.jpg",""" +
+        """"price":"125.00","quantity":3}]"""
+    private val events = listOf(Event("1", "https://example.com/a.jpg", "Show", 12500, 3))
+
+    @Test fun freshFetchUsesUnthrottledPathAndMarksFailuresStale() = runTest(dispatcher) {
+        coEvery { source.fetchFreshAndActivate() } returns Unit
+        every { source.activatedEvents() } returns json
+        assertEquals(EventsResult.Success(EventList(events, false)), repository.getFreshEvents())
+        coEvery { source.fetchFreshAndActivate() } throws Exception("offline")
+        assertEquals(EventsResult.Success(EventList(events, true)), repository.getFreshEvents())
+    }
 
     @Test fun loadsActivatedRemoteValue() = runTest(dispatcher) {
         coEvery { source.fetchAndActivate() } returns Unit

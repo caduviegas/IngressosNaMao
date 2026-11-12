@@ -28,9 +28,11 @@ import com.innaval.ingresosnamao.feature.cart.presentation.CartCleanupRoute
 import com.innaval.ingresosnamao.feature.cart.presentation.cartErrorMessage
 import com.innaval.ingresosnamao.feature.cart.domain.AddToCartUseCase
 import com.innaval.ingresosnamao.feature.cart.domain.CartItem
+import com.innaval.ingresosnamao.feature.cart.domain.CartError
 import com.innaval.ingresosnamao.feature.cart.domain.CartResult
 import com.innaval.ingresosnamao.feature.cart.domain.CartSnapshot
 import com.innaval.ingresosnamao.feature.cart.domain.GetCartUseCase
+import com.innaval.ingresosnamao.feature.cart.domain.ValidateCartAvailabilityUseCase
 import com.innaval.ingresosnamao.feature.cart.domain.cartFingerprint
 import com.innaval.ingresosnamao.feature.payment.domain.PaymentItem
 import com.innaval.ingresosnamao.feature.payment.domain.PaymentOrder
@@ -43,6 +45,7 @@ import com.innaval.ingresosnamao.core.ui.theme.IngressosTheme
 import com.innaval.ingresosnamao.BuildConfig
 import com.innaval.ingresosnamao.feature.events.presentation.EventsRoute
 import com.innaval.ingresosnamao.feature.payment.presentation.PaymentRoute
+import com.innaval.ingresosnamao.feature.payment.presentation.SimulationRecoveryAction
 import com.innaval.ingresosnamao.feature.profile.presentation.ProfileRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.TicketsRoute
 import com.innaval.ingresosnamao.feature.ticket.presentation.ReceiptRoute
@@ -100,6 +103,9 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                         Text("Concluir pagamento de teste pendente")
                     }
                 }
+                if (BuildConfig.DEBUG && paymentState != PaymentState.Ready) {
+                    SimulationRecoveryAction(paymentState)
+                }
                 EventsRoute(
                     adding = adding,
                     cartError = error,
@@ -156,6 +162,7 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
             val fingerprint = requireNotNull(entry.arguments?.getString("fingerprint"))
             val amount = requireNotNull(entry.arguments).getLong("amount")
             val getCart: GetCartUseCase = koinInject()
+            val validateCart: ValidateCartAvailabilityUseCase = koinInject()
             var cartResult by remember(userId, fingerprint) { mutableStateOf<CartResult<CartSnapshot>?>(null) }
             LaunchedEffect(userId, fingerprint) { cartResult = getCart(userId) }
             when (val result = cartResult) {
@@ -178,6 +185,20 @@ fun AppNavHost(nav: NavHostController = rememberNavController()) {
                             enabled = BuildConfig.DEBUG,
                             onPaid = { nav.navigate(Routes.cleanup(userId, fingerprint)) { popUpTo(Routes.PAYMENT) { inclusive = true } } },
                             onBack = { nav.popBackStack() },
+                            validate = {
+                                when (val current = getCart(userId)) {
+                                    is CartResult.Failure -> cartErrorMessage(current.error)
+                                    is CartResult.Success -> {
+                                        val updated = current.value
+                                        if (cartFingerprint(updated) != fingerprint || updated.totalCents != amount) {
+                                            cartErrorMessage(CartError.CART_CHANGED)
+                                        } else when (val check = validateCart(updated)) {
+                                            is CartResult.Failure -> cartErrorMessage(check.error)
+                                            is CartResult.Success -> null
+                                        }
+                                    }
+                                }
+                            },
                         )
                     }
                 }

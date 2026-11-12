@@ -9,8 +9,8 @@ import com.innaval.ingresosnamao.feature.auth.di.authModule
 import com.innaval.ingresosnamao.feature.cart.di.cartModule
 import com.innaval.ingresosnamao.feature.events.di.eventsModule
 import com.innaval.ingresosnamao.feature.payment.di.paymentModule
-import com.innaval.ingresosnamao.feature.ticket.di.ticketModule
 import com.innaval.ingresosnamao.feature.profile.di.profileModule
+import com.innaval.ingresosnamao.feature.ticket.di.ticketModule
 import org.koin.dsl.module
 
 private fun configModule() = module {
@@ -21,5 +21,5 @@ fun appModules() = listOf(
     configModule(),
     commonModule(), networkModule(), databaseModule(),
     authModule(), eventsModule(), cartModule(), paymentModule(), ticketModule(),
-    profileModule(), profileIntegrationModule(),
+    cartAvailabilityModule(), profileModule(), profileIntegrationModule(),
 )

@@ -79,7 +79,10 @@ internal class PaymentRepositoryImpl(
         try {
             val code = response["code"]?.jsonPrimitive?.intOrNull
             if (code != null) {
-                save(attempt.copy(status = if (code == 1) AttemptStatus.CANCELLED else AttemptStatus.ERROR))
+                save(attempt.copy(
+                    status = if (code == 1) AttemptStatus.CANCELLED else AttemptStatus.ERROR,
+                    errorCode = code,
+                ))
                 return
             }
             val reference = response["reference"]?.jsonPrimitive?.contentOrNull
@@ -96,10 +99,12 @@ internal class PaymentRepositoryImpl(
             val paymentTotal = payments?.fold(0L) { total, payment ->
                 Math.addExact(total, payment.jsonObject["amount"]?.jsonPrimitive?.longOrNull ?: 0L)
             }
-            if (reference == attempt.reference && !orderId.isNullOrBlank() &&
-                paid == attempt.order.totalCents && pending == 0L && authorized && paymentTotal == paid
-            ) {
-                save(attempt.copy(status = AttemptStatus.APPROVED, orderId = orderId))
+            val matchesOrder = reference == attempt.reference && !orderId.isNullOrBlank()
+            val matchesPayment = (paid == 0L || paid == attempt.order.totalCents) &&
+                paymentTotal == attempt.order.totalCents
+            val completePayment = pending == 0L && authorized && matchesPayment
+            if (matchesOrder && completePayment) {
+                save(attempt.copy(status = AttemptStatus.APPROVED, orderId = orderId, errorCode = null))
             } else markUnknown(attempt)
         } catch (_: IllegalArgumentException) {
             markUnknown(attempt)
@@ -109,7 +114,7 @@ internal class PaymentRepositoryImpl(
     }
 
     private fun markUnknown(attempt: PaymentAttempt) {
-        save(attempt.copy(status = AttemptStatus.UNKNOWN))
+        save(attempt.copy(status = AttemptStatus.UNKNOWN, errorCode = null))
     }
 
     @Synchronized
@@ -132,5 +137,24 @@ internal class PaymentRepositoryImpl(
         }
         mutableState.value = PaymentState.Ready
         return true
+    }
+
+    @Synchronized
+    override fun discardSimulation(expectedState: PaymentState): DiscardSimulationResult {
+        return when {
+            !enabled -> DiscardSimulationResult.Failure("Recuperação disponível somente em debug.")
+            expectedState == PaymentState.Ready || state.value != expectedState ->
+                DiscardSimulationResult.Failure("A tentativa mudou ou não pode ser descartada. Atualize a tela.")
+            !preferences.edit().remove("attempt").commit() -> {
+                mutableState.value = PaymentState.StorageError(
+                    "Falha ao remover tentativa; não realize outro pagamento."
+                )
+                DiscardSimulationResult.Failure("Não foi possível remover a tentativa de teste.")
+            }
+            else -> {
+                mutableState.value = PaymentState.Ready
+                DiscardSimulationResult.Discarded
+            }
+        }
     }
 }

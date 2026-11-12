@@ -76,7 +76,7 @@ fun EventsScreen(
             items(state.events, key = { it.id }) { event ->
                 IngressosCard(
                     onClick = { onEventClick(event.id, event.name, event.priceCents) },
-                    enabled = !adding,
+                    enabled = !adding && event.quantity > 0,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column {
@@ -104,6 +104,7 @@ fun EventsScreen(
                         ) {
                             Text(event.name, style = MaterialTheme.typography.titleMedium)
                             Text(event.price, style = MaterialTheme.typography.bodyMedium)
+                            Text(if (event.quantity == 0) "Esgotado" else "Disponíveis: ${event.quantity}")
                         }
                     }
                 }

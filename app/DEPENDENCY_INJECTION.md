@@ -35,6 +35,10 @@ antecipada, para preservar os erros explícitos quando a configuração está au
 de ViewModel são factories; a retenção durante o ciclo de vida é responsabilidade do
 `ViewModelStore` Android e de `koinViewModel`.
 
+O contrato `CartAvailability` é ligado em `:app` ao catálogo de eventos: a feature de carrinho
+não depende da feature de eventos. O adaptador exige consulta remota bem-sucedida para aumentos
+e finalização, mas não impede a leitura, redução ou remoção offline do carrinho.
+
 ## Regras de acoplamento e testes
 
 - Cada core com serviços e cada feature exporta uma função que cria seu módulo Koin. As funções

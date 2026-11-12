@@ -137,4 +137,7 @@ fun cartErrorMessage(error: CartError): String = when (error) {
     CartError.FREE_CHECKOUT_UNSUPPORTED -> "A finalização de ingressos gratuitos ainda não é suportada."
     CartError.CART_CHANGED -> "O carrinho foi alterado."
     CartError.STORAGE -> "Não foi possível acessar o carrinho. Tente novamente."
+    CartError.STOCK_UNAVAILABLE -> "Não foi possível atualizar a disponibilidade. Tente novamente."
+    CartError.STOCK_EXCEEDED -> "Quantidade indisponível. Reduza ou remova o item."
+    CartError.PRODUCT_CHANGED -> "O preço do evento mudou. Remova o item e adicione novamente."
 }

@@ -11,14 +11,15 @@ import org.koin.dsl.module
 
 fun cartModule() = module {
     single { CartLocalDataSource(get(), get()) }
-    single<CartRepository> { RoomCartRepository(get(), get()) }
+    single<CartRepository> { RoomCartRepository(get(), get(), get()) }
     factoryOf(::ObserveCartUseCase)
     factoryOf(::GetCartUseCase)
     factoryOf(::AddToCartUseCase)
     factoryOf(::SetCartQuantityUseCase)
     factoryOf(::RemoveFromCartUseCase)
     factoryOf(::ClearCartUseCase)
+    factoryOf(::ValidateCartAvailabilityUseCase)
     factoryOf(::ClearCartForLogoutUseCase)
-    viewModel { (userId: String) -> CartViewModel(userId, get(), get(), get(), get()) }
+    viewModel { (userId: String) -> CartViewModel(userId, get(), get(), get(), get(), get()) }
     viewModel { (userId: String, fingerprint: String) -> CartCleanupViewModel(userId, fingerprint, get()) }
 }

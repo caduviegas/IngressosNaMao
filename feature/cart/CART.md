@@ -30,6 +30,11 @@ há uma etapa de limpeza com possibilidade de repetição se o banco falhar.
   nome e preço unitário para os valores selecionados mais recentes.
 - Aumentar ou diminuir quantidade, mantendo mínimo de uma unidade. Remoção
   exige ação própria.
+- Antes de adicionar ou aumentar, buscar o catálogo atualizado e rejeitar quantidades
+  maiores que `quantity`, SKU ausente ou preço alterado. O incremento é verificado dentro
+  da transação do Room; reduções e remoções continuam possíveis offline.
+- Validar novamente o carrinho antes de abrir o pagamento e no clique de confirmação;
+  sem atualização bem-sucedida, bloquear aumento e finalização e informar o usuário.
 - Consultar o carrinho a partir da listagem, mesmo se eventos estiverem
   indisponíveis; voltar às compras e iniciar pagamento apenas quando não vazio.
 - Se o total for zero, informar que a finalização gratuita ainda não é
@@ -72,6 +77,12 @@ interrompido entre a confirmação remota e o registro local da próxima etapa, 
 reconciliação automática exige suporte a idempotência/consulta no backend de
 pagamentos, ainda inexistente no projeto. O valor calculado pelo cliente deve
 ser revalidado pelo servidor antes de cobrar.
+
+Remote Config não é estoque transacional: a quantidade publicada não é reduzida por compras,
+não reserva ingressos e pode mudar entre a consulta e a cobrança. Para impedir sobrevenda
+entre usuários ou dispositivos, é indispensável um backend com reserva e baixa atômicas.
+O app força uma busca com intervalo zero para essas verificações; a busca pode ser limitada
+pelo Firebase, caso em que novas seleções e finalização são bloqueadas.
 
 ## 8. Critérios de aceite
 

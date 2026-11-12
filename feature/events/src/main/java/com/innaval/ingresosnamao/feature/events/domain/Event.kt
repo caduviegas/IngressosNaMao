@@ -1,6 +1,6 @@
 package com.innaval.ingresosnamao.feature.events.domain
 
-data class Event(val id: String, val imageUrl: String, val name: String, val priceCents: Long)
+data class Event(val id: String, val imageUrl: String, val name: String, val priceCents: Long, val quantity: Int)
 data class EventList(val events: List<Event>, val possiblyStale: Boolean)
 
 enum class EventsError { CONFIGURATION, UNAVAILABLE, MISSING_DATA, INVALID_DATA }
@@ -12,8 +12,10 @@ sealed interface EventsResult {
 
 interface EventRepository {
     suspend fun getEvents(): EventsResult
+    suspend fun getFreshEvents(): EventsResult
 }
 
 class GetEventsUseCase(private val repository: EventRepository) {
     suspend operator fun invoke(): EventsResult = repository.getEvents()
+    suspend fun fresh(): EventsResult = repository.getFreshEvents()
 }

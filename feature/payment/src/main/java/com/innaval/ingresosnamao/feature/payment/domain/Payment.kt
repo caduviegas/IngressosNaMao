@@ -23,6 +23,7 @@ data class PaymentAttempt(
     val startedAtMillis: Long,
     val status: AttemptStatus,
     val orderId: String? = null,
+    val errorCode: Int? = null,
 )
 
 sealed interface PaymentResult {
@@ -44,6 +45,11 @@ sealed interface StartResult {
     data class Failure(val message: String) : StartResult
 }
 
+sealed interface DiscardSimulationResult {
+    data object Discarded : DiscardSimulationResult
+    data class Failure(val message: String) : DiscardSimulationResult
+}
+
 interface PaymentGateway {
     fun launch(attempt: PaymentAttempt, credentials: TestCredentials): StartResult
 }
@@ -54,6 +60,7 @@ interface PaymentRepository {
     fun acceptCallback(encodedResponse: String?)
     fun expire()
     fun acknowledgeApproved(userId: String, fingerprint: String): Boolean
+    fun discardSimulation(expectedState: PaymentState): DiscardSimulationResult
 }
 
 class StartPaymentUseCase(private val repository: PaymentRepository) {

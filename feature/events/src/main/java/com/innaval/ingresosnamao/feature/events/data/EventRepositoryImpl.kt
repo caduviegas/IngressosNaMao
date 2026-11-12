@@ -18,13 +18,18 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-private const val EVENTS_KEY = "events_json"
+private const val EVENTS_KEY = "IngressosDisponiveis"
 
 internal class EventsRemoteDataSource {
     private val config: FirebaseRemoteConfig get() = FirebaseRemoteConfig.getInstance()
 
     suspend fun fetchAndActivate() {
         config.fetchAndActivate().await()
+    }
+
+    suspend fun fetchFreshAndActivate() {
+        config.fetch(0).await()
+        config.activate().await()
     }
 
     fun activatedEvents(): String? {
@@ -46,18 +51,24 @@ internal class EventsJsonParser {
                 require(primitive.isString)
                 return primitive.content.trim().also { require(it.isNotEmpty()) }
             }
-            val id = requiredString("id")
+            val sku = obj["sku"] as? JsonPrimitive ?: throw IllegalArgumentException("Missing sku")
+            require(!sku.isString)
+            val id = sku.content.toLongOrNull()?.takeIf { it >= 0 }?.toString()
+                ?: throw IllegalArgumentException("Invalid sku")
             require(ids.add(id))
             val imageUrl = requiredString("imageUrl")
             val uri = URI.create(imageUrl)
             require(uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank() && uri.userInfo == null)
             val name = requiredString("name")
             val price = obj["price"] as? JsonPrimitive ?: throw IllegalArgumentException("Missing price")
-            require(!price.isString)
             val decimal = price.content.toBigDecimalOrNull() ?: throw IllegalArgumentException("Invalid price")
             require(decimal >= BigDecimal.ZERO)
             val priceCents = decimal.movePointRight(2).longValueExact()
-            Event(id, imageUrl, name, priceCents)
+            val quantity = obj["quantity"] as? JsonPrimitive ?: throw IllegalArgumentException("Missing quantity")
+            require(!quantity.isString)
+            val available = quantity.content.toIntOrNull()?.takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("Invalid quantity")
+            Event(id, imageUrl, name, priceCents, available)
         }
     }
 }
@@ -67,9 +78,12 @@ internal class EventRepositoryImpl(
     private val parser: EventsJsonParser,
     private val dispatchers: DispatcherProvider,
 ) : EventRepository {
-    override suspend fun getEvents(): EventsResult = withContext(dispatchers.io) {
+    override suspend fun getEvents(): EventsResult = load(fresh = false)
+    override suspend fun getFreshEvents(): EventsResult = load(fresh = true)
+
+    private suspend fun load(fresh: Boolean): EventsResult = withContext(dispatchers.io) {
         val fetchFailed = try {
-            source.fetchAndActivate()
+            if (fresh) source.fetchFreshAndActivate() else source.fetchAndActivate()
             false
         } catch (e: CancellationException) {
             throw e
