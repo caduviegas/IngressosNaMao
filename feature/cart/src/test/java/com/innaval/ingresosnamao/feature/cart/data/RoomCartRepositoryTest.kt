@@ -21,15 +21,16 @@ class RoomCartRepositoryTest {
     private val dispatcher = StandardTestDispatcher()
     private val dispatchers = mockk<DispatcherProvider> { every { io } returns dispatcher }
     private val source = mockk<CartLocalDataSource>()
-    private val repository = RoomCartRepository(source, dispatchers)
+    private val availability = CartAvailability { CartResult.Success(listOf(AvailableEvent("event", 100, 3))) }
+    private val repository = RoomCartRepository(source, dispatchers, availability)
     private val item = CartItem("event", "Show", 100, 1)
 
     @Test fun validatesBeforeCallingDatabase() = runTest(dispatcher) {
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.add("", item))
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.add("u", item.copy(quantity = 0)))
         assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.setQuantity("u", "event", 0))
-        coVerify(exactly = 0) { source.add(any(), any()) }
-        coVerify(exactly = 0) { source.setQuantity(any(), any(), any()) }
+        coVerify(exactly = 0) { source.add(any(), any(), any()) }
+        coVerify(exactly = 0) { source.setQuantity(any(), any(), any(), any()) }
     }
 
     @Test fun observesAndRestoresOnlyRequestedAccount() = runTest(dispatcher) {
@@ -43,12 +44,12 @@ class RoomCartRepositoryTest {
     @Test fun reportsReadAndWriteErrorsWithoutEmptyFallback() = runTest(dispatcher) {
         every { source.observe("u") } returns flow { throw IllegalStateException("db") }
         assertEquals(CartResult.Failure(CartError.STORAGE), repository.observe("u").first())
-        coEvery { source.add("u", item) } throws IllegalStateException("db")
+        coEvery { source.add("u", item, any()) } throws IllegalStateException("db")
         assertEquals(CartResult.Failure(CartError.STORAGE), repository.add("u", item))
     }
 
     @Test fun propagatesCancellation() = runTest(dispatcher) {
-        coEvery { source.add("u", item) } throws CancellationException("cancelled")
+        coEvery { source.add("u", item, any()) } throws CancellationException("cancelled")
         try {
             repository.add("u", item)
             fail("CancellationException expected")

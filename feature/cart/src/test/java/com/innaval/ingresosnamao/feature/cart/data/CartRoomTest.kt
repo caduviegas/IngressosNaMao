@@ -30,6 +30,9 @@ class CartRoomTest {
     private lateinit var context: Context
     private val databaseName = "cart-room-test.db"
     private val opened = mutableListOf<AppDatabase>()
+    private var stockPrice = 100L
+    private var stockQuantity = Int.MAX_VALUE
+    private var stockAvailable = true
     private val dispatchers = mockk<DispatcherProvider> { every { io } returns Dispatchers.IO }
 
     @Before fun setup() {
@@ -48,15 +51,20 @@ class CartRoomTest {
             .allowMainThreadQueries()
             .build()
         opened.add(db)
-        return db to RoomCartRepository(CartLocalDataSource(db, db.cartDao()), dispatchers)
+        val availability = CartAvailability {
+            if (stockAvailable) CartResult.Success(listOf(AvailableEvent("event", stockPrice, stockQuantity)))
+            else CartResult.Failure(CartError.STOCK_UNAVAILABLE)
+        }
+        return db to RoomCartRepository(CartLocalDataSource(db, db.cartDao()), dispatchers, availability)
     }
 
     @Test fun persistsRestoresAndIsolatesAccounts() = runBlocking {
         val (db, repo) = open()
         val item = CartItem("event", "Show", 100, 1)
         assertEquals(CartResult.Success(Unit), repo.add("alice", item))
+        stockPrice = 150
         assertEquals(CartResult.Success(Unit), repo.add("alice", item.copy(eventName = "Novo", unitPriceCents = 150)))
-        assertEquals(CartResult.Success(Unit), repo.add("bob", item))
+        assertEquals(CartResult.Success(Unit), repo.add("bob", item.copy(unitPriceCents = 150)))
         assertEquals(CartResult.Success(Unit), repo.setQuantity("alice", "event", 3))
         db.close()
         opened.remove(db)
@@ -65,11 +73,12 @@ class CartRoomTest {
             CartResult.Success(CartSnapshot(listOf(item.copy(eventName = "Novo", unitPriceCents = 150, quantity = 3)), 450)),
             reopened.observe("alice").first(),
         )
-        assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), reopened.get("bob"))
+        val bobCart = CartResult.Success(CartSnapshot(listOf(item.copy(unitPriceCents = 150)), 150))
+        assertEquals(bobCart, reopened.get("bob"))
         assertEquals(CartResult.Success(Unit), reopened.remove("alice", "event"))
         assertEquals(CartResult.Success(CartSnapshot(emptyList(), 0)), reopened.get("alice"))
-        assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), reopened.get("bob"))
-        val fingerprint = cartFingerprint(CartSnapshot(listOf(item), 100))
+        assertEquals(bobCart, reopened.get("bob"))
+        val fingerprint = cartFingerprint(CartSnapshot(listOf(item.copy(unitPriceCents = 150)), 150))
         assertEquals(CartResult.Success(Unit), reopened.clear("bob", fingerprint))
         assertEquals(CartResult.Success(Unit), reopened.clear("bob", fingerprint))
         assertEquals(CartResult.Success(CartSnapshot(emptyList(), 0)), reopened.get("bob"))
@@ -77,6 +86,7 @@ class CartRoomTest {
 
     @Test fun overflowRejectsMutationWithoutChangingStoredCart() = runBlocking {
         val (_, repo) = open()
+        stockPrice = Long.MAX_VALUE
         val item = CartItem("event", "Show", Long.MAX_VALUE, 1)
         assertEquals(CartResult.Success(Unit), repo.add("u", item))
         assertEquals(CartResult.Failure(CartError.LIMIT_EXCEEDED), repo.setQuantity("u", "event", 2))
@@ -90,6 +100,36 @@ class CartRoomTest {
         val results = coroutineScope { List(10) { async { repo.add("u", item) } }.awaitAll() }
         assertEquals(List(10) { CartResult.Success(Unit) }, results)
         assertEquals(CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 10)), 1000)), repo.get("u"))
+    }
+
+    @Test fun stockIsEnforcedTransactionallyAndOfflineReductionStillWorks() = runBlocking {
+        val (db, repo) = open()
+        val item = CartItem("event", "Show", 100, 1)
+        stockQuantity = 2
+        val results = coroutineScope { List(8) { async { repo.add("u", item) } }.awaitAll() }
+        assertEquals(2, results.count { it is CartResult.Success })
+        assertEquals(6, results.count { it == CartResult.Failure(CartError.STOCK_EXCEEDED) })
+        assertEquals(CartResult.Failure(CartError.STOCK_EXCEEDED), repo.setQuantity("u", "event", 3))
+        stockAvailable = false
+        assertEquals(CartResult.Failure(CartError.STOCK_UNAVAILABLE), repo.setQuantity("u", "event", 3))
+        assertEquals(CartResult.Success(Unit), repo.setQuantity("u", "event", 1))
+        db.close()
+        opened.remove(db)
+        val (_, reopened) = open()
+        assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), reopened.get("u"))
+        assertEquals(CartResult.Success(Unit), reopened.remove("u", "event"))
+    }
+
+    @Test fun zeroStockAndChangedPriceDoNotChangeCart() = runBlocking {
+        val (_, repo) = open()
+        val item = CartItem("event", "Show", 100, 1)
+        stockQuantity = 0
+        assertEquals(CartResult.Failure(CartError.STOCK_EXCEEDED), repo.add("u", item))
+        stockQuantity = 1
+        assertEquals(CartResult.Success(Unit), repo.add("u", item))
+        stockPrice = 200
+        assertEquals(CartResult.Failure(CartError.PRODUCT_CHANGED), repo.setQuantity("u", "event", 2))
+        assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), repo.get("u"))
     }
 
     @Test fun paidCleanupDoesNotRemoveItemsChangedAfterCheckout() = runBlocking {

@@ -20,4 +20,5 @@ fun appModules() = listOf(
     configModule(),
     commonModule(), networkModule(), databaseModule(),
     authModule(), eventsModule(), cartModule(), paymentModule(), ticketModule(),
+    cartAvailabilityModule(),
 )

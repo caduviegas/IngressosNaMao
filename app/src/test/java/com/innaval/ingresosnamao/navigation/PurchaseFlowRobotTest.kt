@@ -77,7 +77,10 @@ class PurchaseFlowRobotTest {
         coEvery { auth.currentUser() } returns AuthResult.Success(user)
         coEvery { auth.getProfile(user) } returns AuthResult.Success(UserProfile("Alice", "alice@example.com", "Rua"))
         coEvery { events.getEvents() } returns EventsResult.Success(
-            EventList(listOf(Event("event", "file:///missing-image", "Show", 100)), false)
+            EventList(listOf(Event("event", "file:///missing-image", "Show", 100, 10)), false)
+        )
+        coEvery { events.getFreshEvents() } returns EventsResult.Success(
+            EventList(listOf(Event("event", "file:///missing-image", "Show", 100, 10)), false)
         )
         every { cart.observe("alice") } returns cartState
         coEvery { cart.add("alice", item) } coAnswers {

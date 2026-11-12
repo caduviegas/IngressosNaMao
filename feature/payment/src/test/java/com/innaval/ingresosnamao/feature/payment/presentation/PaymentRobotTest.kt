@@ -42,7 +42,7 @@ class PaymentRobotTest {
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
         var continued = 0
         compose.setContent {
-            IngressosTheme { PaymentRoute(order, true, { continued++ }, {}, viewModel) }
+            IngressosTheme { PaymentRoute(order, true, { continued++ }, {}, viewModel, validate = { null }) }
         }
         val robot = PaymentRobot(compose)
         robot.assertUnknownBlocksContinuing()
@@ -59,7 +59,7 @@ class PaymentRobotTest {
         every { repository.state } returns state
         every { repository.expire() } returns Unit
         val viewModel = PaymentViewModel(StartPaymentUseCase(repository), repository)
-        compose.setContent { IngressosTheme { PaymentRoute(order, true, {}, {}, viewModel) } }
+        compose.setContent { IngressosTheme { PaymentRoute(order, true, {}, {}, viewModel, validate = { null }) } }
         compose.onNodeWithText("Aguardando retorno do emulador. Não inicie outro pagamento.").assertExists()
         compose.runOnIdle { state.value = PaymentState.Active(attempt.copy(status = AttemptStatus.CANCELLED)) }
         compose.onNodeWithText("Cancelamento recebido sem identificação verificável. A tentativa permanece bloqueada.").assertExists()

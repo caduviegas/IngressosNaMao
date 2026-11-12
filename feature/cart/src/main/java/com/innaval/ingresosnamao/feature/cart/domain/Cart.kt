@@ -8,7 +8,10 @@ import java.security.MessageDigest
 data class CartItem(val eventId: String, val eventName: String, val unitPriceCents: Long, val quantity: Int)
 data class CartSnapshot(val items: List<CartItem>, val totalCents: Long)
 
-enum class CartError { INVALID_ITEM, NOT_FOUND, LIMIT_EXCEEDED, FREE_CHECKOUT_UNSUPPORTED, CART_CHANGED, STORAGE }
+enum class CartError {
+    INVALID_ITEM, NOT_FOUND, LIMIT_EXCEEDED, FREE_CHECKOUT_UNSUPPORTED, CART_CHANGED, STORAGE,
+    STOCK_UNAVAILABLE, STOCK_EXCEEDED, PRODUCT_CHANGED
+}
 
 sealed interface CartResult<out T> {
     data class Success<T>(val value: T) : CartResult<T>
@@ -53,6 +56,30 @@ interface CartRepository {
     suspend fun setQuantity(userId: String, eventId: String, quantity: Int): CartResult<Unit>
     suspend fun remove(userId: String, eventId: String): CartResult<Unit>
     suspend fun clear(userId: String, expectedFingerprint: String): CartResult<Unit>
+}
+
+data class AvailableEvent(val id: String, val priceCents: Long, val quantity: Int)
+
+fun interface CartAvailability {
+    suspend fun load(): CartResult<List<AvailableEvent>>
+}
+
+fun validateAvailability(item: CartItem, available: List<AvailableEvent>): CartResult<Unit> {
+    val event = available.find { it.id == item.eventId } ?: return CartResult.Failure(CartError.STOCK_EXCEEDED)
+    return when {
+        item.unitPriceCents != event.priceCents -> CartResult.Failure(CartError.PRODUCT_CHANGED)
+        item.quantity > event.quantity -> CartResult.Failure(CartError.STOCK_EXCEEDED)
+        else -> CartResult.Success(Unit)
+    }
+}
+
+class ValidateCartAvailabilityUseCase(private val availability: CartAvailability) {
+    suspend operator fun invoke(cart: CartSnapshot): CartResult<Unit> = when (val result = availability.load()) {
+        is CartResult.Failure -> result
+        is CartResult.Success -> cart.items.firstNotNullOfOrNull { item ->
+            validateAvailability(item, result.value) as? CartResult.Failure
+        } ?: CartResult.Success(Unit)
+    }
 }
 
 class ObserveCartUseCase(private val repository: CartRepository) {

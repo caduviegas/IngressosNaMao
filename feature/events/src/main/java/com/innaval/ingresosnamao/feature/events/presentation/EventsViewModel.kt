@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class EventUiModel(val id: String, val imageUrl: String, val name: String, val price: String, val priceCents: Long)
+data class EventUiModel(
+    val id: String, val imageUrl: String, val name: String, val price: String, val priceCents: Long, val quantity: Int
+)
 
 sealed interface EventsUiState {
     data object Loading : EventsUiState
@@ -39,7 +41,9 @@ class EventsViewModel(private val getEvents: GetEventsUseCase) : ViewModel() {
                     if (data.events.isEmpty()) EventsUiState.Empty(data.possiblyStale)
                     else EventsUiState.Content(
                         events = data.events.map {
-                            EventUiModel(it.id, it.imageUrl, it.name, formatPriceBrl(it.priceCents), it.priceCents)
+                            EventUiModel(
+                                it.id, it.imageUrl, it.name, formatPriceBrl(it.priceCents), it.priceCents, it.quantity
+                            )
                         },
                         possiblyStale = data.possiblyStale,
                     )

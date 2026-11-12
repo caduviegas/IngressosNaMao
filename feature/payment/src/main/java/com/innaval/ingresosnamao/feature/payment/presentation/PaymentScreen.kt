@@ -1,5 +1,6 @@
 package com.innaval.ingresosnamao.feature.payment.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -32,6 +33,8 @@ class PaymentViewModel(
     val state = repository.state
     private val mutableError = MutableStateFlow<String?>(null)
     val error = mutableError.asStateFlow()
+    private val mutableValidating = MutableStateFlow(false)
+    val validating = mutableValidating.asStateFlow()
 
     init {
         repository.expire()
@@ -49,6 +52,20 @@ class PaymentViewModel(
             is StartResult.Failure -> result.message
         }
     }
+
+    fun submitValidated(order: PaymentOrder, credentials: TestCredentials, validate: suspend () -> String?) {
+        if (mutableValidating.value) return
+        mutableValidating.value = true
+        mutableError.value = null
+        viewModelScope.launch {
+            try {
+                val failure = validate()
+                if (failure == null) submit(order, credentials) else mutableError.value = failure
+            } finally {
+                mutableValidating.value = false
+            }
+        }
+    }
 }
 
 @Composable
@@ -58,9 +75,12 @@ fun PaymentRoute(
     onPaid: () -> Unit,
     onBack: () -> Unit,
     viewModel: PaymentViewModel = koinViewModel(),
+    validate: suspend () -> String?,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val validating by viewModel.validating.collectAsStateWithLifecycle()
+    BackHandler(enabled = validating) {}
     var clientId by remember { mutableStateOf("") }
     var accessToken by remember { mutableStateOf("") }
     Column(
@@ -80,10 +100,10 @@ fun PaymentRoute(
                     singleLine = true, visualTransformation = PasswordVisualTransformation(),
                 )
                 IngressosButton("Abrir emulador", {
-                    viewModel.submit(order, TestCredentials(clientId, accessToken))
+                    viewModel.submitValidated(order, TestCredentials(clientId, accessToken), validate)
                     clientId = ""
                     accessToken = ""
-                })
+                }, enabled = !validating, loading = validating)
             }
             is PaymentState.StorageError -> Text(current.message, color = MaterialTheme.colorScheme.error)
             is PaymentState.Active -> {
@@ -104,6 +124,6 @@ fun PaymentRoute(
             }
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        TextButton(onClick = onBack) { Text("Voltar") }
+        TextButton(onClick = onBack, enabled = !validating) { Text("Voltar") }
     }
 }

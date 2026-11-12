@@ -25,6 +25,7 @@ import org.junit.Test
 class CartViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<CartRepository>()
+    private val availability = mockk<CartAvailability>()
     private val item = CartItem("event", "Show", 100, 1)
     private val cart = CartSnapshot(listOf(item), 100)
 
@@ -34,6 +35,7 @@ class CartViewModelTest {
     private fun viewModel() = CartViewModel(
         "user", ObserveCartUseCase(repository), GetCartUseCase(repository),
         SetCartQuantityUseCase(repository), RemoveFromCartUseCase(repository),
+        ValidateCartAvailabilityUseCase(availability),
     )
 
     @Test fun restoresContentAndPreventsRemovalViaDecrement() = runTest(dispatcher) {
@@ -77,6 +79,7 @@ class CartViewModelTest {
     }
 
     @Test fun checkoutReadsLatestDatabaseTotal() = runTest(dispatcher) {
+        coEvery { availability.load() } returns CartResult.Success(listOf(AvailableEvent("event", 100, 2)))
         every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
         coEvery { repository.get("user") } returns CartResult.Success(CartSnapshot(listOf(item.copy(quantity = 2)), 200))
         val vm = viewModel()
@@ -98,5 +101,24 @@ class CartViewModelTest {
         advanceUntilIdle()
         assertEquals(false, started)
         assertEquals(CartError.FREE_CHECKOUT_UNSUPPORTED, vm.state.value.error)
+    }
+
+    @Test fun checkoutBlocksOutdatedStockAndNetworkFailure() = runTest(dispatcher) {
+        every { repository.observe("user") } returns flowOf(CartResult.Success(cart))
+        coEvery { repository.get("user") } returns CartResult.Success(cart)
+        coEvery { availability.load() } returnsMany listOf(
+            CartResult.Failure(CartError.STOCK_UNAVAILABLE),
+            CartResult.Success(listOf(AvailableEvent("event", 100, 0))),
+        )
+        val vm = viewModel()
+        advanceUntilIdle()
+        var started = false
+        vm.checkout { _, _ -> started = true }
+        advanceUntilIdle()
+        assertEquals(CartError.STOCK_UNAVAILABLE, vm.state.value.error)
+        vm.checkout { _, _ -> started = true }
+        advanceUntilIdle()
+        assertEquals(CartError.STOCK_EXCEEDED, vm.state.value.error)
+        assertEquals(false, started)
     }
 }

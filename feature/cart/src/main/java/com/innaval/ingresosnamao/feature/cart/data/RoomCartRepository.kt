@@ -20,7 +20,7 @@ internal class CartLocalDataSource(private val database: AppDatabase, private va
     fun observe(userId: String): Flow<List<CartEntity>> = dao.observe(userId)
     suspend fun get(userId: String): List<CartEntity> = dao.getAll(userId)
 
-    suspend fun add(userId: String, item: CartItem): CartResult<Unit> = database.withTransaction {
+    suspend fun add(userId: String, item: CartItem, available: List<AvailableEvent>): CartResult<Unit> = database.withTransaction {
         val existing = dao.getAll(userId).map(CartEntity::toDomain)
         val current = existing.find { it.eventId == item.eventId }
         val quantity = if (current == null) 1 else {
@@ -28,6 +28,8 @@ internal class CartLocalDataSource(private val database: AppDatabase, private va
             current.quantity + 1
         }
         val replacement = item.copy(quantity = quantity)
+        val stock = validateAvailability(replacement, available)
+        if (stock is CartResult.Failure) return@withTransaction stock
         val updated = existing.filterNot { it.eventId == item.eventId } + replacement
         when (val checked = calculateCart(updated)) {
             is CartResult.Failure -> checked
@@ -38,11 +40,22 @@ internal class CartLocalDataSource(private val database: AppDatabase, private va
         }
     }
 
-    suspend fun setQuantity(userId: String, eventId: String, quantity: Int): CartResult<Unit> = database.withTransaction {
+    suspend fun setQuantity(
+        userId: String, eventId: String, quantity: Int, availability: CartResult<List<AvailableEvent>>
+    ): CartResult<Unit> = database.withTransaction {
         val existing = dao.getAll(userId).map(CartEntity::toDomain)
         val current = existing.find { it.eventId == eventId }
             ?: return@withTransaction CartResult.Failure(CartError.NOT_FOUND)
         val replacement = current.copy(quantity = quantity)
+        if (quantity > current.quantity) {
+            when (availability) {
+                is CartResult.Failure -> return@withTransaction availability
+                is CartResult.Success -> {
+                    val stock = validateAvailability(replacement, availability.value)
+                    if (stock is CartResult.Failure) return@withTransaction stock
+                }
+            }
+        }
         val updated = existing.map { if (it.eventId == eventId) replacement else it }
         when (val checked = calculateCart(updated)) {
             is CartResult.Failure -> checked
@@ -77,6 +90,7 @@ private fun CartItem.toEntity(userId: String) = CartEntity(userId, eventId, even
 internal class RoomCartRepository(
     private val source: CartLocalDataSource,
     private val dispatchers: DispatcherProvider,
+    private val availability: CartAvailability,
 ) : CartRepository {
     override fun observe(userId: String): Flow<CartResult<CartSnapshot>> {
         if (userId.isBlank()) return flowOf(CartResult.Failure(CartError.INVALID_ITEM))
@@ -96,12 +110,23 @@ internal class RoomCartRepository(
     override suspend fun add(userId: String, item: CartItem): CartResult<Unit> = guarded(userId) {
         if (item.quantity != 1 || calculateCart(listOf(item)) is CartResult.Failure) {
             CartResult.Failure(CartError.INVALID_ITEM)
-        } else source.add(userId, item)
+        } else when (val stock = availability.load()) {
+            is CartResult.Failure -> stock
+            is CartResult.Success -> source.add(userId, item, stock.value)
+        }
     }
 
     override suspend fun setQuantity(userId: String, eventId: String, quantity: Int): CartResult<Unit> = guarded(userId) {
         if (eventId.isBlank() || quantity <= 0) CartResult.Failure(CartError.INVALID_ITEM)
-        else source.setQuantity(userId, eventId, quantity)
+        else {
+            val current = source.get(userId).find { it.eventId == eventId }
+            if (current == null) CartResult.Failure(CartError.NOT_FOUND)
+            else {
+                val stock = if (quantity <= current.quantity) CartResult.Failure(CartError.STOCK_UNAVAILABLE)
+                else availability.load()
+                source.setQuantity(userId, eventId, quantity, stock)
+            }
+        }
     }
 
     override suspend fun remove(userId: String, eventId: String): CartResult<Unit> = guarded(userId) {

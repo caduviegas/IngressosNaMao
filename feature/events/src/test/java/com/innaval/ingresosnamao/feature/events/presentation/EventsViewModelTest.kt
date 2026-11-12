@@ -28,7 +28,7 @@ import org.junit.Test
 class EventsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<EventRepository>()
-    private val event = Event("id", "https://example.com/a.jpg", "Show", 12500)
+    private val event = Event("id", "https://example.com/a.jpg", "Show", 12500, 10)
 
     @Before fun setup() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
@@ -41,7 +41,9 @@ class EventsViewModelTest {
         assertEquals(EventsUiState.Loading, vm.state.value)
         advanceUntilIdle()
         assertEquals(
-            EventsUiState.Content(listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents)), false),
+            EventsUiState.Content(
+                listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents, 10)), false
+            ),
             vm.state.value,
         )
         assertEquals("R$ 1.234,56", formatPriceBrl(123456))
@@ -67,7 +69,9 @@ class EventsViewModelTest {
         vm.load()
         advanceUntilIdle()
         assertEquals(
-            EventsUiState.Content(listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents)), true),
+            EventsUiState.Content(
+                listOf(EventUiModel(event.id, event.imageUrl, event.name, "R$ 125,00", event.priceCents, 10)), true
+            ),
             vm.state.value,
         )
         coVerify(exactly = 2) { repository.getEvents() }
