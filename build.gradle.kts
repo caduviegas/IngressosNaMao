@@ -20,7 +20,7 @@ jacoco {
 
 val coverageModules = listOf(
     ":app", ":core:common", ":core:ui", ":core:network", ":core:database",
-    ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket",
+    ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket", ":feature:profile",
 )
 
 detekt {
@@ -93,7 +93,7 @@ val verifyCoverageInputs = tasks.register("verifyCoverageInputs") {
     val dataToCheck = coverageDataByModule.toMap()
     val modulesWithTests = setOf(
         ":app", ":core:common", ":core:ui",
-        ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket",
+        ":feature:auth", ":feature:events", ":feature:cart", ":feature:payment", ":feature:ticket", ":feature:profile",
     )
     inputs.files(allCoverageClasses, allCoverageData)
     doLast {

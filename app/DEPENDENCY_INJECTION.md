@@ -24,8 +24,12 @@ features. A raiz de composição pertence exclusivamente a `:app`; nenhuma featu
 | Cart | fonte local e `CartRepository` | use cases do carrinho | `CartViewModel` (`userId`), `CartCleanupViewModel` (`userId`, fingerprint) |
 | Payment | `PaymentGateway` e `PaymentRepository` | `StartPaymentUseCase` | `PaymentViewModel` |
 | Ticket | `TicketRepository` e `QrCodeGenerator` | use cases de emissão e consulta | `TicketsViewModel` (`userId`), `ReceiptViewModel` (`userId`, referência), `TicketDetailViewModel` (`userId`, ID) |
+| Profile | fontes Firebase/Firestore e `ProfileRepository` | `GetProfileUseCase`, `LogoutUseCase` | `ProfileViewModel` |
 
 O repositório de pagamento deve permanecer singleton, pois coordena a tentativa e o callback.
+O contrato `ProfileCartCleaner` é implementado e registrado em `:app`, usando o caso de uso
+de limpeza do carrinho; o módulo de perfil não depende da feature de carrinho. `AuthSessionLogout`
+também é adaptado em `:app` para a mesma operação, inclusive na recuperação de cadastro.
 Os clientes Firebase são obtidos pelas fontes ao serem usados: sua inicialização não deve ser
 antecipada, para preservar os erros explícitos quando a configuração está ausente. As definições
 de ViewModel são factories; a retenção durante o ciclo de vida é responsabilidade do

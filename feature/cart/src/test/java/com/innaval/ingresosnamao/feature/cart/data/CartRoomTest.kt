@@ -94,6 +94,20 @@ class CartRoomTest {
         assertEquals(CartResult.Success(CartSnapshot(listOf(item), Long.MAX_VALUE)), repo.get("u"))
     }
 
+    @Test fun logoutClearsOnlyCurrentUsersCartAndPersistsAcrossReopen() = runBlocking {
+        val (db, repo) = open()
+        val item = CartItem("event", "Show", 100, 1)
+        assertEquals(CartResult.Success(Unit), repo.add("alice", item))
+        assertEquals(CartResult.Success(Unit), repo.add("bob", item))
+        assertEquals(CartResult.Success(Unit), repo.clearForLogout("alice"))
+        assertEquals(CartResult.Success(Unit), repo.clearForLogout("alice"))
+        db.close()
+        opened.remove(db)
+        val (_, reopened) = open()
+        assertEquals(CartResult.Success(CartSnapshot(emptyList(), 0)), reopened.get("alice"))
+        assertEquals(CartResult.Success(CartSnapshot(listOf(item), 100)), reopened.get("bob"))
+    }
+
     @Test fun concurrentAdditionsDoNotLoseUpdates() = runBlocking {
         val (_, repo) = open()
         val item = CartItem("event", "Show", 100, 1)

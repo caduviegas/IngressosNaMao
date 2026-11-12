@@ -56,6 +56,7 @@ interface CartRepository {
     suspend fun setQuantity(userId: String, eventId: String, quantity: Int): CartResult<Unit>
     suspend fun remove(userId: String, eventId: String): CartResult<Unit>
     suspend fun clear(userId: String, expectedFingerprint: String): CartResult<Unit>
+    suspend fun clearForLogout(userId: String): CartResult<Unit>
 }
 
 data class AvailableEvent(val id: String, val priceCents: Long, val quantity: Int)
@@ -100,4 +101,7 @@ class RemoveFromCartUseCase(private val repository: CartRepository) {
 }
 class ClearCartUseCase(private val repository: CartRepository) {
     suspend operator fun invoke(userId: String, expectedFingerprint: String) = repository.clear(userId, expectedFingerprint)
+}
+class ClearCartForLogoutUseCase(private val repository: CartRepository) {
+    suspend operator fun invoke(userId: String) = repository.clearForLogout(userId)
 }

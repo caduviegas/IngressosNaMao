@@ -19,6 +19,7 @@ fun cartModule() = module {
     factoryOf(::RemoveFromCartUseCase)
     factoryOf(::ClearCartUseCase)
     factoryOf(::ValidateCartAvailabilityUseCase)
+    factoryOf(::ClearCartForLogoutUseCase)
     viewModel { (userId: String) -> CartViewModel(userId, get(), get(), get(), get(), get()) }
     viewModel { (userId: String, fingerprint: String) -> CartCleanupViewModel(userId, fingerprint, get()) }
 }

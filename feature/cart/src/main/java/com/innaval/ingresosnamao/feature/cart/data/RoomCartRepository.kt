@@ -69,6 +69,10 @@ internal class CartLocalDataSource(private val database: AppDatabase, private va
     suspend fun remove(userId: String, eventId: String): CartResult<Unit> =
         if (dao.remove(userId, eventId) == 0) CartResult.Failure(CartError.NOT_FOUND) else CartResult.Success(Unit)
 
+    suspend fun clearForLogout(userId: String) {
+        dao.clear(userId)
+    }
+
     suspend fun clear(userId: String, expectedFingerprint: String): CartResult<Unit> = database.withTransaction {
         when (val cart = calculateCart(dao.getAll(userId).map(CartEntity::toDomain))) {
             is CartResult.Failure -> cart
@@ -136,6 +140,11 @@ internal class RoomCartRepository(
     override suspend fun clear(userId: String, expectedFingerprint: String): CartResult<Unit> = guarded(userId) {
         if (!expectedFingerprint.matches(Regex("[0-9a-f]{64}"))) CartResult.Failure(CartError.INVALID_ITEM)
         else source.clear(userId, expectedFingerprint)
+    }
+
+    override suspend fun clearForLogout(userId: String): CartResult<Unit> = guarded(userId) {
+        source.clearForLogout(userId)
+        CartResult.Success(Unit)
     }
 
     private suspend fun <T> guarded(userId: String, block: suspend () -> CartResult<T>): CartResult<T> {

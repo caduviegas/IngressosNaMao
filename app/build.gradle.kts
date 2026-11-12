@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":feature:cart"))
     implementation(project(":feature:payment"))
     implementation(project(":feature:ticket"))
+    implementation(project(":feature:profile"))
 
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)

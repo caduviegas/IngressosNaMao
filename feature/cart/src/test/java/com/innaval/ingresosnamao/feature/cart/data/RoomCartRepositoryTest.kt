@@ -57,4 +57,11 @@ class RoomCartRepositoryTest {
             // Cancellation is not a storage error.
         }
     }
+
+    @Test fun logoutReportsStorageFailureAndRejectsEmptyUid() = runTest(dispatcher) {
+        coEvery { source.clearForLogout("u") } throws IllegalStateException("db")
+        assertEquals(CartResult.Failure(CartError.INVALID_ITEM), repository.clearForLogout(""))
+        assertEquals(CartResult.Failure(CartError.STORAGE), repository.clearForLogout("u"))
+        coVerify(exactly = 1) { source.clearForLogout("u") }
+    }
 }
