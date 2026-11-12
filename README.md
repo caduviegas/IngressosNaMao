@@ -114,16 +114,27 @@ emulador da Cielo funcione nelas.
 1. Instale e configure o emulador oficial Cielo no mesmo ambiente Android do
    aplicativo, seguindo a [documentação da Cielo](https://docs.cielo.com.br/cielo-smart/docs/realizando-pagamentos).
    Não instale esse emulador em um terminal Smart.
-2. Obtenha credenciais próprias de teste e configure-as em variáveis de
-   ambiente ou no arquivo local ignorado `cielo.local.properties`:
+2. Baixe o [modelo `cielo.local.properties.example`](cielo.local.properties.example)
+   e salve uma cópia com o nome `cielo.local.properties` na **raiz do projeto**,
+   ao lado do `gradlew`. Se já tiver clonado o repositório, também pode usar
+   o comando abaixo, desde que o arquivo local ainda não exista:
 
-   ```properties
-   CIELO_CLIENT_ID=seu_client_id_de_teste
-   CIELO_ACCESS_TOKEN=seu_access_token_de_teste
+   ```bash
+   cp cielo.local.properties.example cielo.local.properties
    ```
 
-   As variáveis de ambiente têm precedência. Os valores precisam seguir o
-   formato aceito pelo build: letras, números, `_` e `-`.
+   Abra a cópia e preencha `CIELO_CLIENT_ID` e `CIELO_ACCESS_TOKEN` com suas
+   credenciais de **teste** obtidas para o emulador Cielo. O modelo não contém
+   credenciais. O Gradle lê esse arquivo ao configurar o build e incorpora os
+   valores no aplicativo debug para que ele possa iniciar a integração.
+   Sem credenciais, o projeto ainda compila e pode ser executado, mas não
+   consegue iniciar o pagamento; nesse caso, o app informa o erro.
+
+   O arquivo local é ignorado pelo Git e não deve ser compartilhado ou
+   versionado. Também é possível informar as mesmas chaves como variáveis de
+   ambiente, que têm precedência sobre o arquivo. Os valores aceitam apenas
+   letras, números, `_` e `-`. Após alterá-los, sincronize o Gradle e gere e
+   instale novamente o APK debug.
 3. Compile e execute a variante `debug`, entre no aplicativo, adicione eventos
    ao carrinho e finalize a compra para iniciar a simulação.
 
