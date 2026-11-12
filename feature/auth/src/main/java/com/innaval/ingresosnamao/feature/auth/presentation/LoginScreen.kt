@@ -194,7 +194,7 @@ private fun AuthField(
     )
 }
 
-private fun errorMessage(error: AuthError): String = when (error) {
+private fun errorMessage(error: AuthError): String = logoutErrorMessage(error) ?: when (error) {
     AuthError.INVALID_CREDENTIALS -> "E-mail ou senha inválidos."
     AuthError.EMAIL_IN_USE -> "Este e-mail já está cadastrado. Entre com sua conta."
     AuthError.WEAK_PASSWORD -> "A senha não atende à política de segurança."
@@ -206,5 +206,14 @@ private fun errorMessage(error: AuthError): String = when (error) {
     AuthError.CONFIGURATION -> "Firebase ou Google não configurado. Contate o suporte."
     AuthError.PROFILE_READ -> "Não foi possível verificar seu cadastro. Tente novamente."
     AuthError.PROFILE_WRITE -> "Não foi possível salvar seu cadastro. Tente novamente; se sair, entre para completá-lo."
-    AuthError.UNKNOWN -> "Não foi possível autenticar. Tente novamente."
+    else -> "Não foi possível autenticar. Tente novamente."
+}
+
+private fun logoutErrorMessage(error: AuthError): String? = when (error) {
+    AuthError.LOGOUT_CART -> "Não foi possível apagar o carrinho. Você continua na conta; tente novamente."
+    AuthError.LOGOUT_SESSION_CHANGED -> "A sessão mudou. A operação foi interrompida."
+    AuthError.LOGOUT_SESSION_CHANGED_AFTER_CLEAR ->
+        "O carrinho foi apagado, mas a sessão mudou; a outra conta foi mantida."
+    AuthError.LOGOUT_AFTER_CLEAR -> "O carrinho foi apagado, mas não foi possível sair. Tente novamente."
+    else -> null
 }
